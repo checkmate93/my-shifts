@@ -3,62 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Οι Βάρδιές μου</title>
+    <title>Βάρδιες Pro</title>
     <style>
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-color: #ffffff;
-            --pri: #70d1ff; /* Πρωί */
-            --syn: #ff2e2e; /* Συντήρηση */
-            --apo: #c45b00; /* Απόγευμα */
-            --vrad: #000000; /* Βράδυ */
-            --repo: #7d7d7d; /* Αδιαθέτο */
+            --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #7d7d7d;
         }
-        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 20px; }
+        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 20px; user-select: none; }
         .header { background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #444; }
         #monthTitle { font-size: 1.1rem; font-weight: bold; text-transform: uppercase; }
-        button { background: #444; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 1.2rem; }
+        button { background: #444; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 5px; }
         .day-label { text-align: center; font-size: 0.7rem; color: #888; padding: 5px 0; font-weight: bold; }
-        .cell { aspect-ratio: 1/1.3; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; }
-        .num { font-size: 0.9rem; font-weight: bold; margin-bottom: 3px; }
+        .cell { aspect-ratio: 1/1.3; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; position: relative; }
+        .num { font-size: 0.9rem; font-weight: bold; }
         .shft { font-size: 0.75rem; font-weight: bold; }
-        .loc { font-size: 0.55rem; opacity: 0.9; margin-top: 2px; }
+        /* Χρώματα */
         .shift-PR { background: var(--pri); color: black; }
         .shift-SY { background: var(--syn); color: white; }
         .shift-AP { background: var(--apo); color: white; }
         .shift-VR { background: var(--vrad); color: white; border: 1px solid #555; }
         .shift-AD { background: var(--repo); color: white; }
         .shift-8-16 { background: var(--pri); color: black; border: 2px dashed #000; }
+        .modified { border: 2px solid #fff !important; } /* Ένδειξη ότι έχει αλλαχτεί */
         .weekend { border: 1.5px solid #007bff; }
-        .stats { background: #222; margin: 15px; padding: 15px; border-radius: 10px; border: 1px solid #444; font-size: 0.9rem; line-height: 1.6; }
-        .stats b { color: #70d1ff; }
+        
+        /* Modal για αλλαγή βάρδιας */
+        #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+        .modal-content { background: #222; padding: 20px; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 80%; }
+        .modal-btn { padding: 15px; border: none; border-radius: 5px; font-weight: bold; text-align: center; }
+        .stats { background: #222; margin: 15px; padding: 15px; border-radius: 10px; border: 1px solid #444; font-size: 0.9rem; }
+        .reset-btn { background: #ff2e2e; margin-top: 10px; width: 100%; padding: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
+
     <div class="header">
         <button onclick="moveMonth(-1)">❮</button>
         <div id="monthTitle"></div>
         <button onclick="moveMonth(1)">❯</button>
     </div>
+
     <div class="grid" id="calendarGrid"></div>
-    <div class="stats" id="statsArea"></div>
+
+    <div class="stats">
+        <div id="statsArea"></div>
+        <button class="reset-btn" onclick="clearAllChanges()">⚠️ Επαναφορά όλων στα αρχικά</button>
+    </div>
+
+    <!-- Modal Επιλογής -->
+    <div id="editModal" onclick="closeModal()">
+        <h3 id="modalDateLabel">Αλλαγή Βάρδιας</h3>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-btn shift-PR" onclick="saveChange('PR')">Πρωί (PR)</div>
+            <div class="modal-btn shift-SY" onclick="saveChange('SY')">Συντήρηση (SY)</div>
+            <div class="modal-btn shift-AP" onclick="saveChange('AP')">Απόγευμα (AP)</div>
+            <div class="modal-btn shift-VR" onclick="saveChange('VR')">Βράδυ (VR)</div>
+            <div class="modal-btn shift-AD" onclick="saveChange('AD')">Αδιαθέτο (AD)</div>
+            <div class="modal-btn" style="background:#eee; color:#000" onclick="saveChange('8-16')">8-16</div>
+            <div class="modal-btn" style="grid-column: span 2; background:#444; color:#fff" onclick="closeModal()">Ακύρωση</div>
+        </div>
+    </div>
 
     <script>
-        let viewDate = new Date(2026, 3, 1); // Ξεκινάμε Απρίλιο 2026
-        const anchor = new Date(2026, 2, 31); // 31/3 = Βράδυ ΝΔ
-
-        const shifts = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
-        const locs = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
+        let viewDate = new Date(2026, 3, 1);
+        const anchor = new Date(2026, 2, 31);
+        const baseShifts = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
+        
+        let customChanges = JSON.parse(localStorage.getItem('shiftChanges')) || {};
+        let editingKey = null;
 
         function render() {
             const grid = document.getElementById('calendarGrid');
-            const title = document.getElementById('monthTitle');
             grid.innerHTML = '';
             
             const months = ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"];
-            title.innerText = months[viewDate.getMonth()] + " " + viewDate.getFullYear();
+            document.getElementById('monthTitle').innerText = months[viewDate.getMonth()] + " " + viewDate.getFullYear();
 
             ["ΔΕ","ΤΡ","ΤΕ","ΠΕ","ΠΑ","ΣΑ","ΚΥ"].forEach(d => {
                 const el = document.createElement('div'); el.className='day-label'; el.innerText=d; grid.appendChild(el);
@@ -74,25 +96,49 @@
 
             for(let d=1; d<=last.getDate(); d++) {
                 const curr = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+                const dateKey = curr.toISOString().split('T')[0];
                 const diff = Math.floor((curr - anchor) / 86400000);
                 let idx = diff % 25; if(idx < 0) idx += 25;
 
-                const s = shifts[idx]; const l = locs[idx];
+                // Έλεγχος αν υπάρχει χειροκίνητη αλλαγή, αλλιώς πάρε τη βάση
+                let s = customChanges[dateKey] || baseShifts[idx];
+                const isModified = customChanges[dateKey] ? 'modified' : '';
                 const isWE = curr.getDay() === 0 || curr.getDay() === 6;
+                
                 if(s === "VR") vrad++;
                 if(isWE && s !== "AD") workedWE++;
 
                 const div = document.createElement('div');
-                div.className = `cell shift-${s.replace(' ','-')} ${isWE?'weekend':''}`;
-                div.innerHTML = `<span class="num">${d}</span><span class="shft">${s}</span><span class="loc">${l}</span>`;
+                div.className = `cell shift-${s.replace(' ','-')} ${isWE?'weekend':''} ${isModified}`;
+                div.innerHTML = `<span class="num">${d}</span><span class="shft">${s}</span>`;
+                div.onclick = () => openModal(dateKey, d);
                 grid.appendChild(div);
             }
 
-            document.getElementById('statsArea').innerHTML = `
-                <b>Μηνιαία Σύνοψη:</b><br>
-                🌙 Νυχτερινά: <b>${vrad}</b><br>
-                💶 Πενθήμερα (ΣΚ): <b>${workedWE}</b>
-            `;
+            document.getElementById('statsArea').innerHTML = `🌙 Νυχτερινά: <b>${vrad}</b> | 💶 Πενθήμερα: <b>${workedWE}</b>`;
+        }
+
+        function openModal(key, day) {
+            editingKey = key;
+            document.getElementById('modalDateLabel').innerText = "Αλλαγή για τις " + day + "/" + (viewDate.getMonth()+1);
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function saveChange(newShift) {
+            customChanges[editingKey] = newShift;
+            localStorage.setItem('shiftChanges', JSON.stringify(customChanges));
+            closeModal();
+            render();
+        }
+
+        function clearAllChanges() {
+            if(confirm("Θέλεις να διαγράψεις όλες τις χειροκίνητες αλλαγές;")) {
+                customChanges = {};
+                localStorage.removeItem('shiftChanges');
+                render();
+            }
         }
 
         function moveMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); render(); }

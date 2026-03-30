@@ -10,14 +10,19 @@
             --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #7d7d7d;
         }
         body { font-family: sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: env(safe-area-inset-bottom); }
-        .header { background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #444; }
+        .header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #444; }
+        
+        /* Η μπάρα με τις ημέρες */
+        .days-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #222; padding: 5px 10px; border-bottom: 1px solid #333; }
+        .day-name { text-align: center; font-size: 0.7rem; font-weight: bold; color: #888; text-transform: uppercase; }
+        .day-name.sun { color: #ff4d4d; } /* Κόκκινο για την Κυριακή */
+
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
         .cell { aspect-ratio: 1/1.5; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; position: relative; font-size: 0.8rem; }
         .num { font-weight: bold; margin-bottom: 2px; }
         .shft { font-size: 0.7rem; font-weight: 900; }
         .loc { font-size: 0.5rem; opacity: 0.7; text-align: center; }
         
-        /* Κατάσταση "Δουλεμένο" */
         .worked { outline: 3px solid #2ecc71; outline-offset: -3px; }
         .worked::after { content: "✓"; position: absolute; top: 2px; right: 2px; color: #2ecc71; font-size: 0.6rem; font-weight: bold; }
 
@@ -31,7 +36,6 @@
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
         .stat-line b { color: var(--pri); }
 
-        /* Modal */
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; }
         .modal-content { background: #222; width: 85%; padding: 20px; border-radius: 15px; text-align: center; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -43,8 +47,19 @@
 
 <div class="header">
     <button onclick="changeMonth(-1)" style="background:none; color:white; border:none; font-size:1.5rem;">❮</button>
-    <div id="monthLabel"></div>
+    <div id="monthLabel" style="font-weight:bold;"></div>
     <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.5rem;">❯</button>
+</div>
+
+<!-- Προσθήκη ονομάτων ημερών -->
+<div class="days-header">
+    <div class="day-name">Δε</div>
+    <div class="day-name">Τρ</div>
+    <div class="day-name">Τε</div>
+    <div class="day-name">Πε</div>
+    <div class="day-name">Πα</div>
+    <div class="day-name">Σα</div>
+    <div class="day-name sun">Κυ</div>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -60,8 +75,7 @@
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h4 id="dateDisplay"></h4>
-        <button class="m-btn confirm-btn" id="confirmToggle" onclick="toggleWorked()">Σήμανση ως "Δουλεύτηκε"</button>
-        <div style="font-size:0.8rem; color:#888; margin: 10px 0;">Ή άλλαξε τη βάρδια:</div>
+        <button class="m-btn confirm-btn" id="confirmToggle" onclick="toggleWorked()">Επιβεβαίωση / Ακύρωση</button>
         <div class="btn-group">
             <div class="m-btn shift-PR" onclick="updateShift('PR')">ΠΡ</div>
             <div class="m-btn shift-SY" onclick="updateShift('SY')">ΣΥ</div>
@@ -79,7 +93,6 @@
     const baseS = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
-    // Φόρτωση δεδομένων χρήστη
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
     let activeKey = null;
@@ -90,14 +103,13 @@
         const months = ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"];
         document.getElementById('monthLabel').innerText = months[d.getMonth()] + " " + d.getFullYear();
 
-        // Κενά αρχής
         let firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
         let offset = firstDay === 0 ? 6 : firstDay - 1;
         for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
         let counts = { v:0, s:0, k:0 };
-
         let daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+
         for(let i=1; i<=daysInMonth; i++) {
             let curr = new Date(d.getFullYear(), d.getMonth(), i);
             let key = curr.toISOString().split('T')[0];
@@ -108,7 +120,6 @@
             let l = baseL[idx];
             let isWorked = workedDays[key];
 
-            // Υπολογισμός στατιστικών μόνο για όσα τσεκαρίστηκαν
             if(isWorked) {
                 if(s === "VR") counts.v++;
                 if(curr.getDay() === 6) counts.s++;
@@ -131,7 +142,6 @@
     function openModal(key, dayNum, isWorked) {
         activeKey = key;
         document.getElementById('dateDisplay').innerText = dayNum + " " + document.getElementById('monthLabel').innerText;
-        document.getElementById('confirmToggle').innerText = isWorked ? "Ακύρωση Επιβεβαίωσης" : "Επιβεβαίωση ότι Δούλεψα";
         document.getElementById('confirmToggle').style.background = isWorked ? "#e74c3c" : "#2ecc71";
         document.getElementById('modal').style.display = 'flex';
     }

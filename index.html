@@ -1,0 +1,204 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
+import java.util.Locale;
+
+public class ShiftCalendar extends JFrame {
+
+    private JLabel monthLabel;
+    private JLabel infoLabel;
+    private JTable calendarTable;
+    private DefaultTableModel tableModel;
+    private YearMonth currentMonth;
+    private final LocalDate anchorDate = LocalDate.of(2026, 3, 31); // 31/03 = Βράδυ ΝΔ
+
+    public ShiftCalendar() {
+        setTitle("Πρόγραμμα Βαρδιών & Υπολογισμός Πενθημέρων 2026");
+        setSize(1000, 750);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        currentMonth = YearMonth.of(2026, 4);
+
+        // --- Πάνω Μέρος: Πλοήγηση ---
+        JPanel navPanel = new JPanel(new BorderLayout());
+        navPanel.setBackground(new Color(45, 45, 45));
+        JButton prevBtn = new JButton(" << ");
+        JButton nextBtn = new JButton(" >> ");
+        monthLabel = new JLabel("", SwingConstants.CENTER);
+        monthLabel.setForeground(Color.WHITE);
+        monthLabel.setFont(new Font("Tahoma", Font.BOLD, 22));
+
+        prevBtn.addActionListener(e -> changeMonth(-1));
+        nextBtn.addActionListener(e -> changeMonth(1));
+
+        navPanel.add(prevBtn, BorderLayout.WEST);
+        navPanel.add(monthLabel, BorderLayout.CENTER);
+        navPanel.add(nextBtn, BorderLayout.EAST);
+
+        // --- Κέντρο: Πίνακας ---
+        String[] columns = {"Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"};
+        tableModel = new DefaultTableModel(null, columns) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        calendarTable = new JTable(tableModel);
+        calendarTable.setRowHeight(90);
+        calendarTable.getTableHeader().setReorderingAllowed(false);
+        calendarTable.setDefaultRenderer(Object.class, new ShiftRenderer());
+
+        // --- Κάτω Μέρος: Στατιστικά & Κουμπί ---
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
+        infoLabel = new JLabel("Πενθήμερα Μήνα: -", SwingConstants.LEFT);
+        infoLabel.setFont(new Font("Tahoma", Font.BOLD, 14));
+        infoLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JButton calcBtn = new JButton("Υπολογισμός Βαρδιών Μήνα");
+        calcBtn.addActionListener(e -> calculateMonthlyStats());
+
+        bottomPanel.add(infoLabel);
+        bottomPanel.add(calcBtn);
+
+        add(navPanel, BorderLayout.NORTH);
+        add(new JScrollPane(calendarTable), BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        updateCalendar();
+    }
+
+    private void changeMonth(int diff) {
+        currentMonth = currentMonth.plusMonths(diff);
+        updateCalendar();
+    }
+
+    private void updateCalendar() {
+        String monthName = currentMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("el", "GR"));
+        monthLabel.setText(monthName.toUpperCase() + " " + currentMonth.getYear());
+        tableModel.setRowCount(0);
+
+        LocalDate firstOfMonth = currentMonth.atDay(1);
+        int dayOfWeek = firstOfMonth.getDayOfWeek().getValue(); 
+        
+        // Υπολογισμός πόσα ΣΚ έχει ο μήνας (Πενθήμερα βάσει ημερολογίου)
+        int weekends = countWeekendsInMonth(currentMonth);
+        infoLabel.setText("Ο μήνας έχει " + weekends + " Σαββατοκύριακα (Πενθήμερα)");
+
+        Object[] row = new Object[7];
+        int currentDay = 1;
+        for (int i = 0; i < dayOfWeek - 1; i++) row[i] = "";
+
+        while (currentDay <= currentMonth.lengthOfMonth()) {
+            for (int i = dayOfWeek - 1; i < 7 && currentDay <= currentMonth.lengthOfMonth(); i++) {
+                row[i] = currentDay++;
+                dayOfWeek = 1;
+            }
+            tableModel.addRow(row);
+            row = new Object[7];
+        }
+    }
+
+    private int countWeekendsInMonth(YearMonth ym) {
+        int count = 0;
+        for (int d = 1; d <= ym.lengthOfMonth(); d++) {
+            DayOfWeek dw = ym.atDay(d).getDayOfWeek();
+            if (dw == DayOfWeek.SATURDAY) count++; // Μετράμε τα Σάββατα ως δείκτη εβδομάδων
+        }
+        return count;
+    }
+
+    private void calculateMonthlyStats() {
+        int totalNights = 0;
+        int workedWeekends = 0;
+
+        for (int d = 1; d <= currentMonth.lengthOfMonth(); d++) {
+            LocalDate date = currentMonth.atDay(d);
+            long diff = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, date);
+            int cycleIdx = (int) (diff % 25);
+            if (cycleIdx < 0) cycleIdx += 25;
+
+            // Ορισμός Βαρδιών (ίδιος με τον Renderer)
+            String[] shiftNames = {"ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "08-16", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ 3-11"};
+            
+            String shift = shiftNames[cycleIdx];
+            
+            // Μέτρηση Νυχτερινών
+            if (shift.equals("ΒΡ")) totalNights++;
+            
+            // Μέτρηση αν δουλεύεις ΣΚ (Πενθήμερο)
+            DayOfWeek dw = date.getDayOfWeek();
+            if ((dw == DayOfWeek.SATURDAY || dw == DayOfWeek.SUNDAY) && !shift.equals("ΑΔ")) {
+                workedWeekends++;
+            }
+        }
+
+        JOptionPane.showMessageDialog(this, 
+            "Στατιστικά για " + monthLabel.getText() + ":\n" +
+            "----------------------------------\n" +
+            "• Νυχτερινά (ΒΡ): " + totalNights + "\n" +
+            "• Εργάσιμα Σάββατα/Κυριακές: " + workedWeekends + "\n" +
+            "----------------------------------\n" +
+            "Σημείωση: Τα πενθήμερα εξαρτώνται από το λογιστήριο.", 
+            "Καταχώρηση Μήνα", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private class ShiftRenderer extends DefaultTableCellRenderer {
+        private final String[] shiftNames = {"ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "08-16", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ 3-11"};
+        private final String[] locations = {"ΝΔ", "", "Βουλή", "---", "Οικίες", "Ηρώδου", "", "Κέντρο", "---", "ΝΔ", "Βουλή", "", "Οικίες", "---", "Ηρώδου", "Μον/κι", "", "ΝΔ", "---", "Βουλή", "Οικίες", "", "Ηρώδου", "---", "---"};
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            
+            if (value == null || value.toString().isEmpty()) {
+                // Χρώμα για τα κενά κελιά του ΣΚ
+                if (col >= 5) c.setBackground(new Color(240, 240, 240));
+                else c.setBackground(Color.WHITE);
+                setText("");
+                return c;
+            }
+
+            int day = (int) value;
+            LocalDate date = currentMonth.atDay(day);
+            long diff = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, date);
+            int cycleIdx = (int) (diff % 25);
+            if (cycleIdx < 0) cycleIdx += 25;
+
+            // Χρώματα Βαρδιών
+            Color bg = Color.WHITE;
+            Color fg = Color.BLACK;
+
+            String shift = shiftNames[cycleIdx];
+            if (shift.startsWith("ΠΡ") || shift.equals("08-16")) bg = new Color(135, 206, 250);
+            else if (shift.equals("ΣΥ")) { bg = new Color(255, 69, 0); fg = Color.WHITE; }
+            else if (shift.startsWith("ΑΠ")) { bg = new Color(160, 82, 45); fg = Color.WHITE; }
+            else if (shift.equals("ΒΡ")) { bg = Color.BLACK; fg = Color.WHITE; }
+            else if (shift.equals("ΑΔ")) { bg = new Color(210, 210, 210); fg = Color.GRAY; }
+
+            // Ειδικό περίγραμμα ή χρώμα αν είναι Σάββατο (col 5) ή Κυριακή (col 6)
+            if (col >= 5 && shift.equals("ΑΔ")) {
+                bg = new Color(180, 190, 200); // Πιο σκούρο γκρι στα ρεπό του ΣΚ
+            }
+
+            c.setBackground(bg);
+            c.setForeground(fg);
+            
+            // Αν είναι ΣΚ, βάζουμε ένα border για να φαίνεται η διαφορά
+            if (col >= 5) {
+                ((JComponent)c).setBorder(BorderFactory.createLineBorder(new Color(0, 102, 204), 1));
+            } else {
+                ((JComponent)c).setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            }
+
+            setText("<html><center><b>" + day + "</b><br>" + shift + "<br><small>" + locations[cycleIdx] + "</small></center></html>");
+            return c;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new ShiftCalendar().setVisible(true));
+    }
+}

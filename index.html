@@ -3,28 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Work Tracker</title>
+    <title>Shift & Money Tracker</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
             --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #7d7d7d;
         }
-        body { font-family: sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; }
         .header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #444; }
-        
-        /* Η μπάρα με τις ημέρες */
         .days-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #222; padding: 5px 10px; border-bottom: 1px solid #333; }
-        .day-name { text-align: center; font-size: 0.7rem; font-weight: bold; color: #888; text-transform: uppercase; }
-        .day-name.sun { color: #ff4d4d; } /* Κόκκινο για την Κυριακή */
-
+        .day-name { text-align: center; font-size: 0.7rem; font-weight: bold; color: #888; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
-        .cell { aspect-ratio: 1/1.5; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; position: relative; font-size: 0.8rem; }
+        .cell { aspect-ratio: 1/1.6; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; position: relative; font-size: 0.75rem; }
         .num { font-weight: bold; margin-bottom: 2px; }
         .shft { font-size: 0.7rem; font-weight: 900; }
-        .loc { font-size: 0.5rem; opacity: 0.7; text-align: center; }
+        .loc { font-size: 0.45rem; opacity: 0.7; text-align: center; line-height: 1; margin-top:2px; }
         
+        /* Indicators */
         .worked { outline: 3px solid #2ecc71; outline-offset: -3px; }
-        .worked::after { content: "✓"; position: absolute; top: 2px; right: 2px; color: #2ecc71; font-size: 0.6rem; font-weight: bold; }
+        .stadium-mark { position: absolute; bottom: 2px; right: 2px; font-size: 0.7rem; }
+        .worked-mark { position: absolute; top: 2px; right: 2px; color: #2ecc71; font-weight: bold; font-size: 0.6rem; }
 
         .shift-PR { background: var(--pri); color: #000; }
         .shift-SY { background: var(--syn); color: #fff; }
@@ -32,15 +30,17 @@
         .shift-VR { background: var(--vrad); color: #fff; border: 1px solid #555; }
         .shift-AD { background: var(--repo); color: #fff; }
 
-        .stats-box { background: #222; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #444; }
-        .stat-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
-        .stat-line b { color: var(--pri); }
+        .stats-box { background: #222; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .stat-line b { color: var(--pri); font-size: 1rem; }
+        .money { color: #2ecc71 !important; }
 
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; }
         .modal-content { background: #222; width: 85%; padding: 20px; border-radius: 15px; text-align: center; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .m-btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .confirm-btn { background: #2ecc71; color: white; grid-column: span 2; margin-bottom: 10px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .m-btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .confirm-btn { background: #2ecc71; color: white; grid-column: span 2; }
+        .stadium-btn { background: #f1c40f; color: black; grid-column: span 2; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -51,38 +51,33 @@
     <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.5rem;">❯</button>
 </div>
 
-<!-- Προσθήκη ονομάτων ημερών -->
 <div class="days-header">
-    <div class="day-name">Δε</div>
-    <div class="day-name">Τρ</div>
-    <div class="day-name">Τε</div>
-    <div class="day-name">Πε</div>
-    <div class="day-name">Πα</div>
-    <div class="day-name">Σα</div>
-    <div class="day-name sun">Κυ</div>
+    <div class="day-name">Δε</div><div class="day-name">Τρ</div><div class="day-name">Τε</div><div class="day-name">Πε</div><div class="day-name">Πα</div><div class="day-name">Σα</div><div class="day-name" style="color:#ff4d4d">Κυ</div>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <div class="stats-box">
-    <h3 style="margin-top:0; font-size:1rem; border-bottom:1px solid #444; padding-bottom:5px;">Σύνολα Μήνα (Επιβεβαιωμένα)</h3>
-    <div class="stat-line">🌙 Νυχτερινά (ΒΡ): <b id="statVrad">0</b></div>
-    <div class="stat-line">📅 Σάββατα: <b id="statSav">0</b></div>
-    <div class="stat-line">⛪ Κυριακές: <b id="statKyri">0</b></div>
-    <div class="stat-line">💰 Σύνολο Πενθημέρων: <b id="statTotal">0</b></div>
+    <div class="stat-line">🌙 Ώρες Νυχτερινών (8h/νύχτα): <b id="statHours">0h</b></div>
+    <div class="stat-line">📅 Πενθήμερα (Σάββ-Κυρ): <b id="statPent">0</b></div>
+    <div class="stat-line">🏟️ Υπηρεσίες Γηπέδου: <b id="statStadCount">0</b></div>
+    <div class="stat-line" style="border:none; margin-top:10px;">💰 Έξτρα Γήπεδα (€30): <b id="statMoney" class="money">0€</b></div>
 </div>
 
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h4 id="dateDisplay"></h4>
-        <button class="m-btn confirm-btn" id="confirmToggle" onclick="toggleWorked()">Επιβεβαίωση / Ακύρωση</button>
+        <h4 id="dateDisplay" style="margin:0 0 15px 0;"></h4>
+        <button class="m-btn confirm-btn" id="confirmToggle" onclick="toggleWorked()">✅ Επιβεβαίωση Εργασίας</button>
+        <button class="m-btn stadium-btn" id="stadiumToggle" onclick="toggleStadium()">🏟️ Υπηρεσία Γηπέδου (+30€)</button>
+        
+        <div style="margin:15px 0 5px 0; font-size:0.7rem; color:#888;">ΑΛΛΑΓΗ ΒΑΡΔΙΑΣ</div>
         <div class="btn-group">
             <div class="m-btn shift-PR" onclick="updateShift('PR')">ΠΡ</div>
             <div class="m-btn shift-SY" onclick="updateShift('SY')">ΣΥ</div>
             <div class="m-btn shift-AP" onclick="updateShift('AP')">ΑΠ</div>
             <div class="m-btn shift-VR" onclick="updateShift('VR')">ΒΡ</div>
             <div class="m-btn shift-AD" onclick="updateShift('AD')">ΑΔ</div>
-            <div class="m-btn" style="background:#444; color:white" onclick="closeModal()">Κλείσιμο</div>
+            <div class="m-btn" style="background:#444; color:white" onclick="closeModal()">Άκυρο</div>
         </div>
     </div>
 </div>
@@ -95,6 +90,7 @@
 
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
+    let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
     let activeKey = null;
 
     function render() {
@@ -107,7 +103,7 @@
         let offset = firstDay === 0 ? 6 : firstDay - 1;
         for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
-        let counts = { v:0, s:0, k:0 };
+        let stats = { vradHours: 0, pent: 0, stadCount: 0 };
         let daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
 
         for(let i=1; i<=daysInMonth; i++) {
@@ -119,39 +115,61 @@
             let s = userShifts[key] || baseS[idx];
             let l = baseL[idx];
             let isWorked = workedDays[key];
+            let isStad = stadiumDays[key];
 
             if(isWorked) {
-                if(s === "VR") counts.v++;
-                if(curr.getDay() === 6) counts.s++;
-                if(curr.getDay() === 0) counts.k++;
+                if(s === "VR") stats.vradHours += 8;
+                if(curr.getDay() === 6 || curr.getDay() === 0) stats.pent++;
             }
+            if(isStad) stats.stadCount++;
 
             let cell = document.createElement('div');
             cell.className = `cell shift-${s.replace(' ','-')} ${isWorked ? 'worked' : ''}`;
-            cell.innerHTML = `<span class="num">${i}</span><span class="shft">${s}</span><span class="loc">${s==='AD'?'':l}</span>`;
-            cell.onclick = () => openModal(key, i, isWorked);
+            cell.innerHTML = `
+                <span class="num">${i}</span>
+                <span class="shft">${s}</span>
+                <span class="loc">${s==='AD'?'':l}</span>
+                ${isWorked ? '<span class="worked-mark">✓</span>' : ''}
+                ${isStad ? '<span class="stadium-mark">🏟️</span>' : ''}
+            `;
+            cell.onclick = () => openModal(key, i, isWorked, isStad);
             grid.appendChild(cell);
         }
 
-        document.getElementById('statVrad').innerText = counts.v;
-        document.getElementById('statSav').innerText = counts.s;
-        document.getElementById('statKyri').innerText = counts.k;
-        document.getElementById('statTotal').innerText = counts.s + counts.k;
+        document.getElementById('statHours').innerText = stats.vradHours + "h";
+        document.getElementById('statPent').innerText = stats.pent;
+        document.getElementById('statStadCount').innerText = stats.stadCount;
+        document.getElementById('statMoney').innerText = (stats.stadCount * 30) + "€";
     }
 
-    function openModal(key, dayNum, isWorked) {
+    function openModal(key, dayNum, isWorked, isStad) {
         activeKey = key;
         document.getElementById('dateDisplay').innerText = dayNum + " " + document.getElementById('monthLabel').innerText;
-        document.getElementById('confirmToggle').style.background = isWorked ? "#e74c3c" : "#2ecc71";
+        
+        const cBtn = document.getElementById('confirmToggle');
+        cBtn.innerText = isWorked ? "❌ Ακύρωση Εργασίας" : "✅ Επιβεβαίωση Εργασίας";
+        cBtn.style.background = isWorked ? "#e74c3c" : "#2ecc71";
+
+        const sBtn = document.getElementById('stadiumToggle');
+        sBtn.innerText = isStad ? "🚫 Αφαίρεση Γηπέδου" : "🏟️ Υπηρεσία Γηπέδου (+30€)";
+        sBtn.style.background = isStad ? "#e67e22" : "#f1c40f";
+
         document.getElementById('modal').style.display = 'flex';
     }
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
     function toggleWorked() {
-        if(workedDays[activeKey]) delete workedDays[activeKey];
-        else workedDays[activeKey] = true;
+        workedDays[activeKey] = !workedDays[activeKey];
+        if(!workedDays[activeKey]) delete workedDays[activeKey];
         localStorage.setItem('workedDays', JSON.stringify(workedDays));
+        closeModal(); render();
+    }
+
+    function toggleStadium() {
+        stadiumDays[activeKey] = !stadiumDays[activeKey];
+        if(!stadiumDays[activeKey]) delete stadiumDays[activeKey];
+        localStorage.setItem('stadiumDays', JSON.stringify(stadiumDays));
         closeModal(); render();
     }
 

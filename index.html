@@ -1,204 +1,102 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.format.TextStyle;
-import java.util.Locale;
-
-public class ShiftCalendar extends JFrame {
-
-    private JLabel monthLabel;
-    private JLabel infoLabel;
-    private JTable calendarTable;
-    private DefaultTableModel tableModel;
-    private YearMonth currentMonth;
-    private final LocalDate anchorDate = LocalDate.of(2026, 3, 31); // 31/03 = Βράδυ ΝΔ
-
-    public ShiftCalendar() {
-        setTitle("Πρόγραμμα Βαρδιών & Υπολογισμός Πενθημέρων 2026");
-        setSize(1000, 750);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        currentMonth = YearMonth.of(2026, 4);
-
-        // --- Πάνω Μέρος: Πλοήγηση ---
-        JPanel navPanel = new JPanel(new BorderLayout());
-        navPanel.setBackground(new Color(45, 45, 45));
-        JButton prevBtn = new JButton(" << ");
-        JButton nextBtn = new JButton(" >> ");
-        monthLabel = new JLabel("", SwingConstants.CENTER);
-        monthLabel.setForeground(Color.WHITE);
-        monthLabel.setFont(new Font("Tahoma", Font.BOLD, 22));
-
-        prevBtn.addActionListener(e -> changeMonth(-1));
-        nextBtn.addActionListener(e -> changeMonth(1));
-
-        navPanel.add(prevBtn, BorderLayout.WEST);
-        navPanel.add(monthLabel, BorderLayout.CENTER);
-        navPanel.add(nextBtn, BorderLayout.EAST);
-
-        // --- Κέντρο: Πίνακας ---
-        String[] columns = {"Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"};
-        tableModel = new DefaultTableModel(null, columns) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-
-        calendarTable = new JTable(tableModel);
-        calendarTable.setRowHeight(90);
-        calendarTable.getTableHeader().setReorderingAllowed(false);
-        calendarTable.setDefaultRenderer(Object.class, new ShiftRenderer());
-
-        // --- Κάτω Μέρος: Στατιστικά & Κουμπί ---
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
-        infoLabel = new JLabel("Πενθήμερα Μήνα: -", SwingConstants.LEFT);
-        infoLabel.setFont(new Font("Tahoma", Font.BOLD, 14));
-        infoLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        JButton calcBtn = new JButton("Υπολογισμός Βαρδιών Μήνα");
-        calcBtn.addActionListener(e -> calculateMonthlyStats());
-
-        bottomPanel.add(infoLabel);
-        bottomPanel.add(calcBtn);
-
-        add(navPanel, BorderLayout.NORTH);
-        add(new JScrollPane(calendarTable), BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        updateCalendar();
-    }
-
-    private void changeMonth(int diff) {
-        currentMonth = currentMonth.plusMonths(diff);
-        updateCalendar();
-    }
-
-    private void updateCalendar() {
-        String monthName = currentMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("el", "GR"));
-        monthLabel.setText(monthName.toUpperCase() + " " + currentMonth.getYear());
-        tableModel.setRowCount(0);
-
-        LocalDate firstOfMonth = currentMonth.atDay(1);
-        int dayOfWeek = firstOfMonth.getDayOfWeek().getValue(); 
-        
-        // Υπολογισμός πόσα ΣΚ έχει ο μήνας (Πενθήμερα βάσει ημερολογίου)
-        int weekends = countWeekendsInMonth(currentMonth);
-        infoLabel.setText("Ο μήνας έχει " + weekends + " Σαββατοκύριακα (Πενθήμερα)");
-
-        Object[] row = new Object[7];
-        int currentDay = 1;
-        for (int i = 0; i < dayOfWeek - 1; i++) row[i] = "";
-
-        while (currentDay <= currentMonth.lengthOfMonth()) {
-            for (int i = dayOfWeek - 1; i < 7 && currentDay <= currentMonth.lengthOfMonth(); i++) {
-                row[i] = currentDay++;
-                dayOfWeek = 1;
-            }
-            tableModel.addRow(row);
-            row = new Object[7];
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Οι Βάρδιές μου</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --pri: #70d1ff; /* Πρωί */
+            --syn: #ff2e2e; /* Συντήρηση */
+            --apo: #c45b00; /* Απόγευμα */
+            --vrad: #000000; /* Βράδυ */
+            --repo: #7d7d7d; /* Αδιαθέτο */
         }
-    }
+        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 20px; }
+        .header { background: #222; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #444; }
+        #monthTitle { font-size: 1.1rem; font-weight: bold; text-transform: uppercase; }
+        button { background: #444; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 1.2rem; }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 5px; }
+        .day-label { text-align: center; font-size: 0.7rem; color: #888; padding: 5px 0; font-weight: bold; }
+        .cell { aspect-ratio: 1/1.3; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; }
+        .num { font-size: 0.9rem; font-weight: bold; margin-bottom: 3px; }
+        .shft { font-size: 0.75rem; font-weight: bold; }
+        .loc { font-size: 0.55rem; opacity: 0.9; margin-top: 2px; }
+        .shift-PR { background: var(--pri); color: black; }
+        .shift-SY { background: var(--syn); color: white; }
+        .shift-AP { background: var(--apo); color: white; }
+        .shift-VR { background: var(--vrad); color: white; border: 1px solid #555; }
+        .shift-AD { background: var(--repo); color: white; }
+        .shift-8-16 { background: var(--pri); color: black; border: 2px dashed #000; }
+        .weekend { border: 1.5px solid #007bff; }
+        .stats { background: #222; margin: 15px; padding: 15px; border-radius: 10px; border: 1px solid #444; font-size: 0.9rem; line-height: 1.6; }
+        .stats b { color: #70d1ff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button onclick="moveMonth(-1)">❮</button>
+        <div id="monthTitle"></div>
+        <button onclick="moveMonth(1)">❯</button>
+    </div>
+    <div class="grid" id="calendarGrid"></div>
+    <div class="stats" id="statsArea"></div>
 
-    private int countWeekendsInMonth(YearMonth ym) {
-        int count = 0;
-        for (int d = 1; d <= ym.lengthOfMonth(); d++) {
-            DayOfWeek dw = ym.atDay(d).getDayOfWeek();
-            if (dw == DayOfWeek.SATURDAY) count++; // Μετράμε τα Σάββατα ως δείκτη εβδομάδων
-        }
-        return count;
-    }
+    <script>
+        let viewDate = new Date(2026, 3, 1); // Ξεκινάμε Απρίλιο 2026
+        const anchor = new Date(2026, 2, 31); // 31/3 = Βράδυ ΝΔ
 
-    private void calculateMonthlyStats() {
-        int totalNights = 0;
-        int workedWeekends = 0;
+        const shifts = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
+        const locs = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
-        for (int d = 1; d <= currentMonth.lengthOfMonth(); d++) {
-            LocalDate date = currentMonth.atDay(d);
-            long diff = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, date);
-            int cycleIdx = (int) (diff % 25);
-            if (cycleIdx < 0) cycleIdx += 25;
-
-            // Ορισμός Βαρδιών (ίδιος με τον Renderer)
-            String[] shiftNames = {"ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "08-16", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ 3-11"};
+        function render() {
+            const grid = document.getElementById('calendarGrid');
+            const title = document.getElementById('monthTitle');
+            grid.innerHTML = '';
             
-            String shift = shiftNames[cycleIdx];
-            
-            // Μέτρηση Νυχτερινών
-            if (shift.equals("ΒΡ")) totalNights++;
-            
-            // Μέτρηση αν δουλεύεις ΣΚ (Πενθήμερο)
-            DayOfWeek dw = date.getDayOfWeek();
-            if ((dw == DayOfWeek.SATURDAY || dw == DayOfWeek.SUNDAY) && !shift.equals("ΑΔ")) {
-                workedWeekends++;
+            const months = ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"];
+            title.innerText = months[viewDate.getMonth()] + " " + viewDate.getFullYear();
+
+            ["ΔΕ","ΤΡ","ΤΕ","ΠΕ","ΠΑ","ΣΑ","ΚΥ"].forEach(d => {
+                const el = document.createElement('div'); el.className='day-label'; el.innerText=d; grid.appendChild(el);
+            });
+
+            const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+            const last = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+            let start = first.getDay() === 0 ? 6 : first.getDay() - 1;
+
+            for(let i=0; i<start; i++) grid.appendChild(document.createElement('div'));
+
+            let vrad = 0, workedWE = 0;
+
+            for(let d=1; d<=last.getDate(); d++) {
+                const curr = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+                const diff = Math.floor((curr - anchor) / 86400000);
+                let idx = diff % 25; if(idx < 0) idx += 25;
+
+                const s = shifts[idx]; const l = locs[idx];
+                const isWE = curr.getDay() === 0 || curr.getDay() === 6;
+                if(s === "VR") vrad++;
+                if(isWE && s !== "AD") workedWE++;
+
+                const div = document.createElement('div');
+                div.className = `cell shift-${s.replace(' ','-')} ${isWE?'weekend':''}`;
+                div.innerHTML = `<span class="num">${d}</span><span class="shft">${s}</span><span class="loc">${l}</span>`;
+                grid.appendChild(div);
             }
+
+            document.getElementById('statsArea').innerHTML = `
+                <b>Μηνιαία Σύνοψη:</b><br>
+                🌙 Νυχτερινά: <b>${vrad}</b><br>
+                💶 Πενθήμερα (ΣΚ): <b>${workedWE}</b>
+            `;
         }
 
-        JOptionPane.showMessageDialog(this, 
-            "Στατιστικά για " + monthLabel.getText() + ":\n" +
-            "----------------------------------\n" +
-            "• Νυχτερινά (ΒΡ): " + totalNights + "\n" +
-            "• Εργάσιμα Σάββατα/Κυριακές: " + workedWeekends + "\n" +
-            "----------------------------------\n" +
-            "Σημείωση: Τα πενθήμερα εξαρτώνται από το λογιστήριο.", 
-            "Καταχώρηση Μήνα", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private class ShiftRenderer extends DefaultTableCellRenderer {
-        private final String[] shiftNames = {"ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "08-16", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ", "ΒΡ", "ΑΔ", "ΠΡ", "ΣΥ", "ΑΠ 3-11"};
-        private final String[] locations = {"ΝΔ", "", "Βουλή", "---", "Οικίες", "Ηρώδου", "", "Κέντρο", "---", "ΝΔ", "Βουλή", "", "Οικίες", "---", "Ηρώδου", "Μον/κι", "", "ΝΔ", "---", "Βουλή", "Οικίες", "", "Ηρώδου", "---", "---"};
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            
-            if (value == null || value.toString().isEmpty()) {
-                // Χρώμα για τα κενά κελιά του ΣΚ
-                if (col >= 5) c.setBackground(new Color(240, 240, 240));
-                else c.setBackground(Color.WHITE);
-                setText("");
-                return c;
-            }
-
-            int day = (int) value;
-            LocalDate date = currentMonth.atDay(day);
-            long diff = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, date);
-            int cycleIdx = (int) (diff % 25);
-            if (cycleIdx < 0) cycleIdx += 25;
-
-            // Χρώματα Βαρδιών
-            Color bg = Color.WHITE;
-            Color fg = Color.BLACK;
-
-            String shift = shiftNames[cycleIdx];
-            if (shift.startsWith("ΠΡ") || shift.equals("08-16")) bg = new Color(135, 206, 250);
-            else if (shift.equals("ΣΥ")) { bg = new Color(255, 69, 0); fg = Color.WHITE; }
-            else if (shift.startsWith("ΑΠ")) { bg = new Color(160, 82, 45); fg = Color.WHITE; }
-            else if (shift.equals("ΒΡ")) { bg = Color.BLACK; fg = Color.WHITE; }
-            else if (shift.equals("ΑΔ")) { bg = new Color(210, 210, 210); fg = Color.GRAY; }
-
-            // Ειδικό περίγραμμα ή χρώμα αν είναι Σάββατο (col 5) ή Κυριακή (col 6)
-            if (col >= 5 && shift.equals("ΑΔ")) {
-                bg = new Color(180, 190, 200); // Πιο σκούρο γκρι στα ρεπό του ΣΚ
-            }
-
-            c.setBackground(bg);
-            c.setForeground(fg);
-            
-            // Αν είναι ΣΚ, βάζουμε ένα border για να φαίνεται η διαφορά
-            if (col >= 5) {
-                ((JComponent)c).setBorder(BorderFactory.createLineBorder(new Color(0, 102, 204), 1));
-            } else {
-                ((JComponent)c).setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
-            }
-
-            setText("<html><center><b>" + day + "</b><br>" + shift + "<br><small>" + locations[cycleIdx] + "</small></center></html>");
-            return c;
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ShiftCalendar().setVisible(true));
-    }
-}
+        function moveMonth(step) { viewDate.setMonth(viewDate.getMonth() + step); render(); }
+        render();
+    </script>
+</body>
+</html>

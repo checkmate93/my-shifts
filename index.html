@@ -2,128 +2,130 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Work & Leaves Tracker</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
             --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #7d7d7d; --green: #2ecc71; --purp: #a55eea;
         }
-        body { font-family: sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; overflow-x: hidden; }
         
-        /* Tabs Navigation */
-        .tabs { display: flex; background: #222; border-bottom: 2px solid #444; position: sticky; top: 0; z-index: 1000; }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
-        .tab-btn.active { color: var(--pri); border-bottom: 3px solid var(--pri); background: #2a2a2a; }
+        .tabs { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; padding: 5px; gap: 5px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.75rem; transition: 0.3s; }
+        .tab-btn.active { color: var(--pri); background: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 
-        .header { padding: 10px; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; }
-        .days-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #1a1a1a; padding: 5px 10px; border-bottom: 1px solid #333; }
-        .day-name { text-align: center; font-size: 0.7rem; color: #888; }
+        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .month-label { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .days-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px 5px 10px; }
+        .day-name { text-align: center; font-size: 0.65rem; color: #555; font-weight: bold; }
+
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
+        .cell { aspect-ratio: 1/1.4; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #222; position: relative; font-size: 0.75rem; overflow: hidden; }
         
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; }
-        .cell { aspect-ratio: 1/1.6; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; position: relative; font-size: 0.75rem; }
+        .num { position: absolute; top: 2px; left: 3px; font-size: 0.65rem; opacity: 0.5; font-weight: bold; }
+        .shft { font-weight: 900; font-size: 0.8rem; }
+        .loc { font-size: 0.5rem; opacity: 0.6; text-align: center; margin-top: 2px; }
         
         /* Indicators */
-        .worked { outline: 3px solid var(--green); outline-offset: -3px; }
-        .stadium-mark { position: absolute; bottom: 2px; right: 2px; font-size: 0.7rem; }
-        .leave-mark { position: absolute; top: 2px; left: 2px; font-size: 0.6rem; color: var(--purp); font-weight: bold; }
-
-        /* Forms & Boxes */
-        .box { background: #222; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #444; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; }
-        input { background: #333; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; width: 60px; text-align: center; }
+        .worked { outline: 2px solid var(--green); outline-offset: -2px; }
+        .stadium-mark { position: absolute; bottom: 1px; right: 2px; font-size: 0.7rem; }
         
-        .leave-stat { padding: 10px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
-        .leave-stat:last-child { border: none; }
+        /* Η Άδεια καλύπτει το κείμενο αλλά αφήνει το χρώμα */
+        .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); font-size: 1rem; font-weight: 900; color: white; text-shadow: 0 0 5px rgba(0,0,0,0.8); z-index: 5; }
 
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-        .btn-green { background: var(--green); color: white; }
-        .btn-red { background: #c0392b; color: white; margin-top: 20px; font-size: 0.7rem; }
+        .box { background: #1a1a1a; margin: 12px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.85rem; }
+        input { background: #222; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; width: 55px; text-align: center; font-weight: bold; }
+        
+        .total-box { background: linear-gradient(145deg, #1e1e1e, #141414); border: 1px solid var(--green); text-align: center; padding: 20px; margin: 12px; border-radius: 15px; }
+        .total-val { font-size: 1.8rem; font-weight: 900; color: var(--green); margin-top: 5px; }
 
-        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: #222; width: 90%; max-height: 90vh; overflow-y: auto; padding: 20px; border-radius: 15px; text-align: center; }
+        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: #1a1a1a; width: 85%; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+        .btn { padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; font-size: 0.85rem; }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
 
-        .leave-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
-        .leave-opt { background: #34495e; color: white; padding: 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+        /* Shift Styles */
+        .shift-PR { background: var(--pri); color: #000; }
+        .shift-SY { background: var(--syn); color: #fff; }
+        .shift-AP { background: var(--apo); color: #fff; }
+        .shift-VR { background: var(--vrad); color: #fff; border: 1px solid #444; }
+        .shift-AD { background: var(--repo); color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('calendar')">Ημερολόγιο</button>
-    <button class="tab-btn" onclick="showTab('leaves')">Άδειες</button>
+    <button class="tab-btn active" id="btn-cal" onclick="showTab('calendar')">ΗΜΕΡΟΛΟΓΙΟ</button>
+    <button class="tab-btn" id="btn-lea" onclick="showTab('leaves')">ΑΔΕΙΕΣ</button>
 </div>
 
 <div id="tab-calendar">
     <div class="header">
-        <button onclick="changeMonth(-1)" style="background:none; color:white; border:none; font-size:1.2rem;">❮</button>
-        <div id="monthLabel" style="font-weight:bold;"></div>
-        <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.2rem;">❯</button>
+        <button onclick="changeMonth(-1)" style="background:none; color:white; border:none; font-size:1.5rem;">❮</button>
+        <div id="monthLabel" class="month-label"></div>
+        <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.5rem;">❯</button>
     </div>
     <div class="days-header">
-        <div class="day-name">Δε</div><div class="day-name">Τρ</div><div class="day-name">Τε</div><div class="day-name">Πε</div><div class="day-name">Πα</div><div class="day-name">Σα</div><div class="day-name" style="color:#ff4d4d">Κυ</div>
+        <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name" style="color:#ff4d4d">ΚΥ</div>
     </div>
     <div class="grid" id="grid"></div>
 
-    <div class="box">
-        <h4 style="margin:0 0 10px 0; font-size:0.8rem; color:var(--pri);">🔍 ΥΠΟΛΟΓΙΣΤΗΣ ΒΑΣΙΚΟΥ</h4>
-        <div class="row">Σύνολο Τράπεζας (€): <input type="number" id="calcTotal"></div>
-        <div class="row">Πενθ. / Νύχτες / Γήπ.: <div style="display:flex; gap:2px;"><input type="number" id="calcP" style="width:30px"> <input type="number" id="calcN" style="width:30px"> <input type="number" id="calcS" style="width:30px"></div></div>
-        <button class="btn btn-green" style="padding:5px;" onclick="calculateBase()">Υπολογισμός</button>
+    <div class="total-box">
+        <div style="font-size: 0.7rem; opacity: 0.6; text-transform: uppercase;">Εκτίμηση Καθαρής Πληρωμής</div>
+        <div class="total-val"><span id="grandTotal">0</span>€</div>
+        <div id="statsSummary" style="font-size: 0.7rem; margin-top:10px; opacity: 0.8; border-top: 1px solid #333; padding-top: 10px;"></div>
     </div>
 
     <div class="box">
-        <div id="statsBreakdown" style="font-size:0.8rem; line-height:1.5;"></div>
-        <div style="font-size:1.2rem; font-weight:bold; color:var(--green); text-align:center; margin-top:10px; border-top:1px solid #333; padding-top:10px;">
-            Σύνολο: <span id="grandTotal">0</span> €
-        </div>
-    </div>
-
-    <div class="box" style="background:transparent; border:none;">
-        <button class="btn btn-red" onclick="clearAppData()">🗑️ ΕΚΚΑΘΑΡΙΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ</button>
+        <h4 style="margin:0 0 10px 0; font-size:0.75rem; color:#888;">⚙️ ΡΥΘΜΙΣΕΙΣ</h4>
+        <div class="row">Βασικός Μισθός (€): <input type="number" id="baseSalary" value="1600" oninput="saveSettings()"></div>
+        <button class="btn" style="background:#333; color:#ff4d4d; font-size:0.7rem; margin-top:10px;" onclick="clearAppData()">ΕΚΚΑΘΑΡΙΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ</button>
     </div>
 </div>
 
 <div id="tab-leaves" style="display:none;">
     <div class="box">
-        <h4 style="margin:0 0 10px 0; color:var(--purp);">📝 ΡΥΘΜΙΣΗ ΔΙΚΑΙΩΜΑΤΩΝ (ΕΤΟΣ)</h4>
-        <div class="row">Κανονική (ΚΑ): <input type="number" id="maxKA" value="20" oninput="saveLeaveSettings()"></div>
-        <div class="row">Βραχεία (ΒΑ): <input type="number" id="maxBA" value="4" oninput="saveLeaveSettings()"></div>
-        <div class="row">Ημερ. Διαταγής (ΗΑ): <input type="number" id="maxHA" value="10" oninput="saveLeaveSettings()"></div>
+        <h4 style="margin:0 0 15px 0; color:var(--pri); font-size:0.8rem;">ΕΤΗΣΙΑ ΔΙΚΑΙΩΜΑΤΑ</h4>
+        <div class="row">Κανονική (ΚΑ): <input type="number" id="maxKA" value="34" oninput="saveLeaveSettings()"></div>
+        <div class="row">Βραχεία (ΒΑ): <input type="number" id="maxBA" value="11" oninput="saveLeaveSettings()"></div>
+        <div class="row">Ημερήσια (ΗΑ): <input type="number" id="maxHA" value="10" oninput="saveLeaveSettings()"></div>
         <div class="row">Φοιτητική (ΦΑ): <input type="number" id="maxFA" value="0" oninput="saveLeaveSettings()"></div>
         <div class="row">Αιμοδοτική (ΑΙΜ): <input type="number" id="maxAIM" value="0" oninput="saveLeaveSettings()"></div>
     </div>
 
-    <div class="box">
-        <h4 style="margin:0 0 10px 0; color:var(--green);">📊 ΥΠΟΛΟΙΠΟ ΑΔΕΙΩΝ</h4>
-        <div id="leaveStatsArea"></div>
-    </div>
+    <div id="leaveStatsArea"></div>
 </div>
 
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="dateDisplay"></h3>
-        <button class="btn" id="confirmToggle" onclick="toggleWorked()" style="background:var(--green); color:white;">Δούλεψα ✓</button>
-        <button class="btn" id="stadiumToggle" onclick="toggleStadium()" style="background:#f1c40f; color:black;">Γήπεδο 🏟️</button>
+        <h3 id="dateDisplay" style="margin-top:0"></h3>
         
-        <div style="margin:15px 0 5px 0; font-weight:bold; font-size:0.8rem;">ΣΗΜΑΝΣΗ ΑΔΕΙΑΣ</div>
-        <div class="leave-grid">
-            <div class="leave-opt" onclick="setLeave('ΚΑ')">ΚΑ</div>
-            <div class="leave-opt" onclick="setLeave('ΒΑ')">ΒΑ</div>
-            <div class="leave-opt" onclick="setLeave('ΗΑ')">ΗΑ</div>
-            <div class="leave-opt" onclick="setLeave('ΦΑ')">ΦΑ</div>
-            <div class="leave-opt" onclick="setLeave('ΑΙΜ')">ΑΙΜ</div>
-            <div class="leave-opt" style="background:#c0392b" onclick="setLeave(null)">X</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button class="btn" id="confirmToggle" onclick="toggleWorked()" style="background:var(--green); color:white;">ΔΟΥΛΕΨΑ ✓</button>
+            <button class="btn" id="stadiumToggle" onclick="toggleStadium()" style="background:#f1c40f; color:black;">ΓΗΠΕΔΟ 🏟️</button>
         </div>
 
-        <div style="margin:15px 0 5px 0; font-weight:bold; font-size:0.8rem;">ΑΛΛΑΓΗ ΒΑΡΔΙΑΣ</div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
-            <div class="cell shift-PR" style="aspect-ratio:auto; padding:10px" onclick="updateShift('PR')">ΠΡ</div>
-            <div class="cell shift-SY" style="aspect-ratio:auto; padding:10px" onclick="updateShift('SY')">ΣΥ</div>
-            <div class="cell shift-AP" style="aspect-ratio:auto; padding:10px" onclick="updateShift('AP')">ΑΠ</div>
-            <div class="cell shift-VR" style="aspect-ratio:auto; padding:10px" onclick="updateShift('VR')">ΒΡ</div>
-            <div class="cell shift-AD" style="aspect-ratio:auto; padding:10px" onclick="updateShift('AD')">ΑΔ</div>
-            <div class="cell" style="aspect-ratio:auto; padding:10px; background:#444;" onclick="closeModal()">✖</div>
+        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.75rem; color:#888; text-transform:uppercase;">Καταχώρηση Άδειας</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΚΑ')">ΚΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΒΑ')">ΒΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΗΑ')">ΗΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΦΑ')">ΦΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΑΙΜ')">ΑΙΜ</div>
+            <div class="btn" style="background:#444; color:white; padding:10px;" onclick="setLeave(null)">X</div>
+        </div>
+
+        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.75rem; color:#888; text-transform:uppercase;">Αλλαγή Βάρδιας</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+            <div class="cell shift-PR" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('PR')">ΠΡ</div>
+            <div class="cell shift-SY" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('SY')">ΣΥ</div>
+            <div class="cell shift-AP" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('AP')">ΑΠ</div>
+            <div class="cell shift-VR" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('VR')">ΒΡ</div>
+            <div class="cell shift-AD" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('AD')">ΑΔ</div>
+            <div class="cell" style="aspect-ratio:auto; padding:12px; background:#222; font-weight:bold; border:none;" onclick="closeModal()">✖</div>
         </div>
     </div>
 </div>
@@ -134,20 +136,26 @@
     const baseS = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
-    // Data Storage
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
     let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
-    let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {}; // { "2026-04-01": "ΚΑ" }
+    let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
     let activeKey = null;
 
     let settings = JSON.parse(localStorage.getItem('payrollSettings')) || { base: 1600, pent: 40, night: 24, stad: 20 };
-    let leaveSettings = JSON.parse(localStorage.getItem('leaveSettings')) || { ΚΑ: 20, ΒΑ: 4, ΗΑ: 10, ΦΑ: 0, ΑΙΜ: 0 };
+    let leaveSettings = JSON.parse(localStorage.getItem('leaveSettings')) || { ΚΑ: 34, ΒΑ: 11, ΗΑ: 10, ΦΑ: 0, ΑΙΜ: 0 };
 
     function showTab(tab) {
         document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
         document.getElementById('tab-leaves').style.display = tab === 'leaves' ? 'block' : 'none';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(tab === 'calendar' ? 'ημερ' : 'άδει')));
+        document.getElementById('btn-cal').classList.toggle('active', tab === 'calendar');
+        document.getElementById('btn-lea').classList.toggle('active', tab === 'leaves');
+        render();
+    }
+
+    function saveSettings() {
+        settings.base = parseFloat(document.getElementById('baseSalary').value) || 0;
+        localStorage.setItem('payrollSettings', JSON.stringify(settings));
         render();
     }
 
@@ -161,19 +169,6 @@
         render();
     }
 
-    function calculateBase() {
-        let total = parseFloat(document.getElementById('calcTotal').value) || 0;
-        let p = parseInt(document.getElementById('calcP').value) || 0;
-        let n = parseInt(document.getElementById('calcN').value) || 0;
-        let s = parseInt(document.getElementById('calcS').value) || 0;
-        let foundBase = total - (p*settings.pent) - (n*settings.night) - (s*settings.stad);
-        if(confirm("Ο βασικός υπολογίστηκε: "+foundBase+"€. Αποθήκευση;")) {
-            settings.base = foundBase;
-            localStorage.setItem('payrollSettings', JSON.stringify(settings));
-            render();
-        }
-    }
-
     function render() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
@@ -185,10 +180,10 @@
         for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
         let stats = { nights: 0, pent: 0, stad: 0 };
-        let leaveCounts = { ΚΑ:0, ΒΑ:0, ΗΑ:0, ΦΑ:0, ΑΙΜ:0 };
+        let leaveTotals = { ΚΑ:0, ΒΑ:0, ΗΑ:0, ΦΑ:0, ΑΙΜ:0 };
 
-        // Υπολογισμός αδειών έτους
-        Object.values(leaveDays).forEach(v => { if(leaveCounts.hasOwnProperty(v)) leaveCounts[v]++; });
+        // Καταμέτρηση αδειών έτους
+        Object.values(leaveDays).forEach(v => { if(leaveTotals.hasOwnProperty(v)) leaveTotals[v]++; });
 
         let daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
         for(let i=1; i<=daysInMonth; i++) {
@@ -198,54 +193,62 @@
             let idx = diff % 25; if(idx<0) idx+=25;
 
             let s = userShifts[key] || baseS[idx];
-            let isWorked = workedDays[key];
-            let isStad = stadiumDays[key];
+            let worked = workedDays[key];
+            let stadium = stadiumDays[key];
             let leave = leaveDays[key];
 
-            if(isWorked) {
+            if(worked) {
                 if(s === "VR") stats.nights++;
                 if(curr.getDay() === 6 || curr.getDay() === 0) stats.pent++;
             }
-            if(isStad) stats.stad++;
+            if(stadium) stats.stad++;
 
             let cell = document.createElement('div');
-            cell.className = `cell shift-${s.replace(' ','-')} ${isWorked ? 'worked' : ''}`;
-            cell.innerHTML = `
-                <span class="num">${i}</span>
-                <span class="shft">${s}</span>
-                <span class="loc">${s==='AD'?'':baseL[idx]}</span>
-                ${isStad ? '<span class="stadium-mark">🏟️</span>' : ''}
-                ${leave ? `<span class="leave-mark">${leave}</span>` : ''}
-            `;
+            cell.className = `cell shift-${s.replace(' ','-')} ${worked ? 'worked' : ''}`;
+            
+            let content = `<span class="num">${i}</span>`;
+            if(leave) {
+                content += `<div class="leave-overlay">${leave}</div>`;
+            } else {
+                content += `<span class="shft">${s}</span><span class="loc">${s==='AD'?'':baseL[idx]}</span>`;
+            }
+            if(stadium) content += `<span class="stadium-mark">🏟️</span>`;
+            
+            cell.innerHTML = content;
             cell.onclick = () => openModal(key, i);
             grid.appendChild(cell);
         }
 
-        // Stats Updates
-        let nightVal = stats.nights * settings.night;
-        let pentVal = stats.pent * settings.pent;
-        let stadVal = stats.stad * settings.stad;
-        document.getElementById('statsBreakdown').innerHTML = `
-            • Βασικός: ${settings.base}€ | • Νύχτες: +${nightVal}€<br>
-            • Πενθήμερα: +${pentVal}€ | • Γήπεδα: +${stadVal}€
-        `;
-        document.getElementById('grandTotal').innerText = (settings.base + nightVal + pentVal + stadVal).toFixed(2);
+        // Summary Calculations
+        let nMoney = stats.nights * settings.night;
+        let pMoney = stats.pent * settings.pent;
+        let sMoney = stats.stad * settings.stad;
+        document.getElementById('grandTotal').innerText = (settings.base + nMoney + pMoney + sMoney).toFixed(2);
+        document.getElementById('statsSummary').innerHTML = `🌙 ${stats.nights} Νύχτες | 📅 ${stats.pent} Πενθ. | 🏟️ ${stats.stad} Γήπεδα`;
 
-        // Leave Stats Tab
-        let html = "";
+        // Update Leaves Tab
+        let leaveHtml = "";
         for(let type in leaveSettings) {
-            let used = leaveCounts[type] || 0;
+            let used = leaveTotals[type] || 0;
             let remain = leaveSettings[type] - used;
-            html += `<div class="leave-stat"><b>${type}:</b> <span>Χρήση: ${used} / Υπόλοιπο: <b style="color:var(--pri)">${remain}</b></span></div>`;
+            leaveHtml += `
+                <div class="box" style="border-left: 5px solid ${remain < 3 ? '#ff4d4d' : 'var(--pri)'};">
+                    <div class="row" style="margin-bottom:5px;"><b>${type}</b> <span style="font-size:0.7rem; opacity:0.6;">Σύνολο: ${leaveSettings[type]}</span></div>
+                    <div class="row">
+                        <span style="font-size:0.8rem">Χρησιμοποιήθηκαν: <b>${used}</b></span>
+                        <span style="font-size:1rem; color:var(--pri)">Υπόλοιπο: <b>${remain}</b></span>
+                    </div>
+                </div>`;
         }
-        document.getElementById('leaveStatsArea').innerHTML = html;
+        document.getElementById('leaveStatsArea').innerHTML = leaveHtml;
         
-        // Load settings inputs
+        // Sync settings inputs
         document.getElementById('maxKA').value = leaveSettings.ΚΑ;
         document.getElementById('maxBA').value = leaveSettings.ΒΑ;
         document.getElementById('maxHA').value = leaveSettings.ΗΑ;
         document.getElementById('maxFA').value = leaveSettings.ΦΑ;
         document.getElementById('maxAIM').value = leaveSettings.ΑΙΜ;
+        document.getElementById('baseSalary').value = settings.base;
     }
 
     function openModal(key, day) {
@@ -262,7 +265,7 @@
     function changeMonth(n) { d.setMonth(d.getMonth()+n); render(); }
 
     function clearAppData() {
-        if(confirm("ΠΡΟΣΟΧΗ! Θα διαγραφούν ΟΛΕΣ οι βάρδιες, οι άδειες και οι ρυθμίσεις μισθού αυτού του ημερολογίου. Είσαι σίγουρος;")) {
+        if(confirm("Θα διαγραφούν όλα τα δεδομένα (βάρδιες, άδειες, μισθός) από αυτή τη συσκευή. Είσαι σίγουρος;")) {
             localStorage.clear();
             location.reload();
         }

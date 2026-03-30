@@ -3,55 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work & Leaves Tracker</title>
+    <title>Work & Leaves Tracker Pro</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
-            --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #7d7d7d; --green: #2ecc71; --purp: #a55eea;
+            --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #4a4a4a; --green: #2ecc71; --purp: #a55eea;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; }
         
         .tabs { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; padding: 5px; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.75rem; transition: 0.3s; }
-        .tab-btn.active { color: var(--pri); background: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.75rem; }
+        .tab-btn.active { color: var(--pri); background: #333; }
 
-        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .month-label { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .month-label { font-weight: 800; font-size: 1rem; text-transform: uppercase; }
 
         .days-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px 5px 10px; }
         .day-name { text-align: center; font-size: 0.65rem; color: #555; font-weight: bold; }
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
-        .cell { aspect-ratio: 1/1.4; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #222; position: relative; font-size: 0.75rem; overflow: hidden; }
+        .cell { aspect-ratio: 1/1.4; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #222; position: relative; font-size: 0.75rem; overflow: hidden; transition: 0.2s; }
         
-        .num { position: absolute; top: 2px; left: 3px; font-size: 0.65rem; opacity: 0.5; font-weight: bold; }
-        .shft { font-weight: 900; font-size: 0.8rem; }
-        .loc { font-size: 0.5rem; opacity: 0.6; text-align: center; margin-top: 2px; }
+        .num { position: absolute; top: 2px; left: 3px; font-size: 0.65rem; opacity: 0.5; font-weight: bold; z-index: 10; }
+        .shft { font-weight: 900; font-size: 0.8rem; z-index: 10; }
+        .loc { font-size: 0.45rem; opacity: 0.7; text-align: center; margin-top: 2px; z-index: 10; }
         
-        /* Indicators */
-        .worked { outline: 2px solid var(--green); outline-offset: -2px; }
-        .stadium-mark { position: absolute; bottom: 1px; right: 2px; font-size: 0.7rem; }
-        
-        /* Η Άδεια καλύπτει το κείμενο αλλά αφήνει το χρώμα */
-        .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); font-size: 1rem; font-weight: 900; color: white; text-shadow: 0 0 5px rgba(0,0,0,0.8); z-index: 5; }
+        /* Εφέ Σκιαγράφησης (Hatch) για το "Δούλεψα" */
+        .worked { 
+            position: relative;
+            outline: 2px solid var(--green);
+            outline-offset: -2px;
+        }
+        .worked::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                rgba(46, 204, 113, 0.2) 5px,
+                rgba(46, 204, 113, 0.2) 10px
+            );
+            z-index: 1;
+        }
+
+        .stadium-mark { position: absolute; bottom: 1px; right: 2px; font-size: 0.7rem; z-index: 11; }
+        .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); font-size: 1rem; font-weight: 900; color: white; z-index: 15; }
 
         .box { background: #1a1a1a; margin: 12px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
         .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.85rem; }
-        input { background: #222; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; width: 55px; text-align: center; font-weight: bold; }
+        input { background: #222; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; width: 60px; text-align: center; }
         
-        .total-box { background: linear-gradient(145deg, #1e1e1e, #141414); border: 1px solid var(--green); text-align: center; padding: 20px; margin: 12px; border-radius: 15px; }
-        .total-val { font-size: 1.8rem; font-weight: 900; color: var(--green); margin-top: 5px; }
+        /* Payroll Section */
+        .payroll-summary { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444; }
+        .btn-payroll { background: var(--green); color: white; font-weight: bold; padding: 15px; border-radius: 12px; border: none; width: calc(100% - 24px); margin: 12px; cursor: pointer; display: block; font-size: 0.9rem; }
 
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: #1a1a1a; width: 85%; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #333; }
-        .btn { padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; font-size: 0.85rem; }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
+        .btn { padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
 
         /* Shift Styles */
         .shift-PR { background: var(--pri); color: #000; }
         .shift-SY { background: var(--syn); color: #fff; }
         .shift-AP { background: var(--apo); color: #fff; }
         .shift-VR { background: var(--vrad); color: #fff; border: 1px solid #444; }
+        .shift-Ρεπ { background: var(--repo); color: #fff; }
         .shift-AD { background: var(--repo); color: #fff; }
     </style>
 </head>
@@ -68,63 +85,67 @@
         <div id="monthLabel" class="month-label"></div>
         <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.5rem;">❯</button>
     </div>
+    
     <div class="days-header">
         <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name" style="color:#ff4d4d">ΚΥ</div>
     </div>
+    
     <div class="grid" id="grid"></div>
 
-    <div class="total-box">
-        <div style="font-size: 0.7rem; opacity: 0.6; text-transform: uppercase;">Εκτίμηση Καθαρής Πληρωμής</div>
-        <div class="total-val"><span id="grandTotal">0</span>€</div>
-        <div id="statsSummary" style="font-size: 0.7rem; margin-top:10px; opacity: 0.8; border-top: 1px solid #333; padding-top: 10px;"></div>
+    <button class="btn-payroll" onclick="togglePayroll()">📊 ΥΠΟΛΟΓΙΣΜΟΣ ΜΙΣΘΟΔΟΣΙΑΣ</button>
+    
+    <div id="payrollContent" class="box" style="display:none; border: 2px solid var(--green);">
+        <div id="statsDetails" style="font-size: 0.85rem; line-height: 1.8;"></div>
+        <div style="text-align: center; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <div style="font-size: 0.7rem; opacity: 0.6; text-transform: uppercase;">Εκτίμηση Καθαρών</div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--green);"><span id="grandTotal">0</span>€</div>
+        </div>
+        
+        <div style="margin-top:20px; border-top: 1px solid #333; padding-top:10px;">
+            <div class="row">Βασικός (€): <input type="number" id="baseSalary" value="1600" oninput="saveSettings()"></div>
+            <div style="font-size:0.6rem; color:#666; text-align:center;">Οι τιμές (40€ Πενθ / 24€ Νύχτα / 20€ Γήπεδο) είναι προεπιλεγμένες.</div>
+        </div>
     </div>
 
-    <div class="box">
-        <h4 style="margin:0 0 10px 0; font-size:0.75rem; color:#888;">⚙️ ΡΥΘΜΙΣΕΙΣ</h4>
-        <div class="row">Βασικός Μισθός (€): <input type="number" id="baseSalary" value="1600" oninput="saveSettings()"></div>
-        <button class="btn" style="background:#333; color:#ff4d4d; font-size:0.7rem; margin-top:10px;" onclick="clearAppData()">ΕΚΚΑΘΑΡΙΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ</button>
+    <div class="box" style="border-color: #444; opacity: 0.7;">
+        <button class="btn" style="background:#333; color:#ff4d4d; font-size:0.7rem;" onclick="clearAppData()">🗑️ ΟΛΙΚΗ ΔΙΑΓΡΑΦΗ ΔΕΔΟΜΕΝΩΝ</button>
     </div>
 </div>
 
 <div id="tab-leaves" style="display:none;">
     <div class="box">
-        <h4 style="margin:0 0 15px 0; color:var(--pri); font-size:0.8rem;">ΕΤΗΣΙΑ ΔΙΚΑΙΩΜΑΤΑ</h4>
+        <h4 style="margin:0 0 15px 0; color:var(--pri);">ΕΤΗΣΙΑ ΔΙΚΑΙΩΜΑΤΑ ΑΔΕΙΩΝ</h4>
         <div class="row">Κανονική (ΚΑ): <input type="number" id="maxKA" value="34" oninput="saveLeaveSettings()"></div>
         <div class="row">Βραχεία (ΒΑ): <input type="number" id="maxBA" value="11" oninput="saveLeaveSettings()"></div>
         <div class="row">Ημερήσια (ΗΑ): <input type="number" id="maxHA" value="10" oninput="saveLeaveSettings()"></div>
-        <div class="row">Φοιτητική (ΦΑ): <input type="number" id="maxFA" value="0" oninput="saveLeaveSettings()"></div>
-        <div class="row">Αιμοδοτική (ΑΙΜ): <input type="number" id="maxAIM" value="0" oninput="saveLeaveSettings()"></div>
     </div>
-
     <div id="leaveStatsArea"></div>
 </div>
 
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="dateDisplay" style="margin-top:0"></h3>
+        <h3 id="dateDisplay" style="margin-top:0; font-size:1.1rem;"></h3>
         
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button class="btn" id="confirmToggle" onclick="toggleWorked()" style="background:var(--green); color:white;">ΔΟΥΛΕΨΑ ✓</button>
-            <button class="btn" id="stadiumToggle" onclick="toggleStadium()" style="background:#f1c40f; color:black;">ΓΗΠΕΔΟ 🏟️</button>
+            <button class="btn" id="confirmToggle" onclick="toggleWorked()" style="background:var(--green); color:white; font-size:0.8rem;">ΔΟΥΛΕΨΑ ✓</button>
+            <button class="btn" id="stadiumToggle" onclick="toggleStadium()" style="background:#f1c40f; color:black; font-size:0.8rem;">ΓΗΠΕΔΟ 🏟️</button>
         </div>
 
-        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.75rem; color:#888; text-transform:uppercase;">Καταχώρηση Άδειας</div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
-            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΚΑ')">ΚΑ</div>
-            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΒΑ')">ΒΑ</div>
-            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΗΑ')">ΗΑ</div>
-            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΦΑ')">ΦΑ</div>
-            <div class="btn" style="background:var(--purp); color:white; padding:10px;" onclick="setLeave('ΑΙΜ')">ΑΙΜ</div>
-            <div class="btn" style="background:#444; color:white; padding:10px;" onclick="setLeave(null)">X</div>
+        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.7rem; color:#888; text-transform:uppercase;">Καταχώρηση Άδειας</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
+            <div class="btn" style="background:var(--purp); color:white; padding:10px; font-size:0.7rem;" onclick="setLeave('ΚΑ')">ΚΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px; font-size:0.7rem;" onclick="setLeave('ΒΑ')">ΒΑ</div>
+            <div class="btn" style="background:var(--purp); color:white; padding:10px; font-size:0.7rem;" onclick="setLeave('ΗΑ')">ΗΑ</div>
+            <div class="btn" style="background:#444; color:white; padding:10px; font-size:0.7rem;" onclick="setLeave(null)">X</div>
         </div>
 
-        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.75rem; color:#888; text-transform:uppercase;">Αλλαγή Βάρδιας</div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+        <div style="margin:20px 0 10px 0; font-weight:bold; font-size:0.7rem; color:#888; text-transform:uppercase;">Επιλογή Βάρδιας</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
             <div class="cell shift-PR" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('PR')">ΠΡ</div>
             <div class="cell shift-SY" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('SY')">ΣΥ</div>
             <div class="cell shift-AP" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('AP')">ΑΠ</div>
             <div class="cell shift-VR" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('VR')">ΒΡ</div>
-            <div class="cell shift-AD" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('AD')">ΑΔ</div>
+            <div class="cell shift-Ρεπ" style="aspect-ratio:auto; padding:12px; font-weight:bold; border:none;" onclick="updateShift('Ρεπ')">Ρεπ</div>
             <div class="cell" style="aspect-ratio:auto; padding:12px; background:#222; font-weight:bold; border:none;" onclick="closeModal()">✖</div>
         </div>
     </div>
@@ -133,7 +154,7 @@
 <script>
     let d = new Date(2026, 3, 1);
     const anchor = new Date(2026, 2, 31);
-    const baseS = ["VR","AD","PR","SY","AP","VR","AD","8-16","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP","VR","AD","PR","SY","AP"];
+    const baseS = ["VR","Ρεπ","PR","SY","AP","VR","Ρεπ","PR","SY","AP","VR","Ρεπ","PR","SY","AP","VR","Ρεπ","PR","SY","AP","VR","Ρεπ","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
@@ -143,7 +164,7 @@
     let activeKey = null;
 
     let settings = JSON.parse(localStorage.getItem('payrollSettings')) || { base: 1600, pent: 40, night: 24, stad: 20 };
-    let leaveSettings = JSON.parse(localStorage.getItem('leaveSettings')) || { ΚΑ: 34, ΒΑ: 11, ΗΑ: 10, ΦΑ: 0, ΑΙΜ: 0 };
+    let leaveSettings = JSON.parse(localStorage.getItem('leaveSettings')) || { ΚΑ: 34, ΒΑ: 11, ΗΑ: 10 };
 
     function showTab(tab) {
         document.getElementById('tab-calendar').style.display = tab === 'calendar' ? 'block' : 'none';
@@ -153,6 +174,12 @@
         render();
     }
 
+    function togglePayroll() {
+        const content = document.getElementById('payrollContent');
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        if(content.style.display === 'block') content.scrollIntoView({ behavior: 'smooth' });
+    }
+
     function saveSettings() {
         settings.base = parseFloat(document.getElementById('baseSalary').value) || 0;
         localStorage.setItem('payrollSettings', JSON.stringify(settings));
@@ -160,11 +187,9 @@
     }
 
     function saveLeaveSettings() {
-        leaveSettings.ΚΑ = parseInt(document.getElementById('maxKA').value) || 0;
-        leaveSettings.ΒΑ = parseInt(document.getElementById('maxBA').value) || 0;
-        leaveSettings.ΗΑ = parseInt(document.getElementById('maxHA').value) || 0;
-        leaveSettings.ΦΑ = parseInt(document.getElementById('maxFA').value) || 0;
-        leaveSettings.ΑΙΜ = parseInt(document.getElementById('maxAIM').value) || 0;
+        leaveSettings.ΚΑ = parseInt(document.getElementById('maxKA').value) || 34;
+        leaveSettings.ΒΑ = parseInt(document.getElementById('maxBA').value) || 11;
+        leaveSettings.ΗΑ = parseInt(document.getElementById('maxHA').value) || 10;
         localStorage.setItem('leaveSettings', JSON.stringify(leaveSettings));
         render();
     }
@@ -180,9 +205,8 @@
         for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
         let stats = { nights: 0, pent: 0, stad: 0 };
-        let leaveTotals = { ΚΑ:0, ΒΑ:0, ΗΑ:0, ΦΑ:0, ΑΙΜ:0 };
+        let leaveTotals = { ΚΑ:0, ΒΑ:0, ΗΑ:0 };
 
-        // Καταμέτρηση αδειών έτους
         Object.values(leaveDays).forEach(v => { if(leaveTotals.hasOwnProperty(v)) leaveTotals[v]++; });
 
         let daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
@@ -204,13 +228,15 @@
             if(stadium) stats.stad++;
 
             let cell = document.createElement('div');
-            cell.className = `cell shift-${s.replace(' ','-')} ${worked ? 'worked' : ''}`;
+            // Support for old "AD" to "Ρεπ"
+            let shiftClass = s === "AD" ? "Ρεπ" : s.replace(' ','-');
+            cell.className = `cell shift-${shiftClass} ${worked ? 'worked' : ''}`;
             
             let content = `<span class="num">${i}</span>`;
             if(leave) {
                 content += `<div class="leave-overlay">${leave}</div>`;
             } else {
-                content += `<span class="shft">${s}</span><span class="loc">${s==='AD'?'':baseL[idx]}</span>`;
+                content += `<span class="shft">${s === "AD" ? "Ρεπ" : s}</span><span class="loc">${(s==='AD'||s==='Ρεπ')?'':baseL[idx]}</span>`;
             }
             if(stadium) content += `<span class="stadium-mark">🏟️</span>`;
             
@@ -219,36 +245,35 @@
             grid.appendChild(cell);
         }
 
-        // Summary Calculations
+        // Calculations
         let nMoney = stats.nights * settings.night;
         let pMoney = stats.pent * settings.pent;
         let sMoney = stats.stad * settings.stad;
-        document.getElementById('grandTotal').innerText = (settings.base + nMoney + pMoney + sMoney).toFixed(2);
-        document.getElementById('statsSummary').innerHTML = `🌙 ${stats.nights} Νύχτες | 📅 ${stats.pent} Πενθ. | 🏟️ ${stats.stad} Γήπεδα`;
+        let total = settings.base + nMoney + pMoney + sMoney;
 
-        // Update Leaves Tab
+        document.getElementById('grandTotal').innerText = total.toFixed(2);
+        document.getElementById('statsDetails').innerHTML = `
+            • Βασικός: <b>${settings.base}€</b><br>
+            • Νυχτερινά (${stats.nights}): <b>+${nMoney}€</b><br>
+            • Πενθήμερα (${stats.pent}): <b>+${pMoney}€</b><br>
+            • Γήπεδα (${stats.stad}): <b>+${sMoney}€</b>
+        `;
+
+        // Leaves Tab
         let leaveHtml = "";
         for(let type in leaveSettings) {
             let used = leaveTotals[type] || 0;
             let remain = leaveSettings[type] - used;
             leaveHtml += `
-                <div class="box" style="border-left: 5px solid ${remain < 3 ? '#ff4d4d' : 'var(--pri)'};">
-                    <div class="row" style="margin-bottom:5px;"><b>${type}</b> <span style="font-size:0.7rem; opacity:0.6;">Σύνολο: ${leaveSettings[type]}</span></div>
-                    <div class="row">
-                        <span style="font-size:0.8rem">Χρησιμοποιήθηκαν: <b>${used}</b></span>
-                        <span style="font-size:1rem; color:var(--pri)">Υπόλοιπο: <b>${remain}</b></span>
+                <div class="box" style="border-left: 5px solid ${remain < 2 ? '#ff4d4d' : 'var(--green)'};">
+                    <div class="row"><b>${type}</b> <span>Σύνολο: ${leaveSettings[type]}</span></div>
+                    <div class="row" style="margin-top:10px;">
+                        <span>Χρήση: <b>${used}</b></span>
+                        <span style="color:var(--pri)">Υπόλοιπο: <b>${remain}</b></span>
                     </div>
                 </div>`;
         }
         document.getElementById('leaveStatsArea').innerHTML = leaveHtml;
-        
-        // Sync settings inputs
-        document.getElementById('maxKA').value = leaveSettings.ΚΑ;
-        document.getElementById('maxBA').value = leaveSettings.ΒΑ;
-        document.getElementById('maxHA').value = leaveSettings.ΗΑ;
-        document.getElementById('maxFA').value = leaveSettings.ΦΑ;
-        document.getElementById('maxAIM').value = leaveSettings.ΑΙΜ;
-        document.getElementById('baseSalary').value = settings.base;
     }
 
     function openModal(key, day) {
@@ -265,10 +290,7 @@
     function changeMonth(n) { d.setMonth(d.getMonth()+n); render(); }
 
     function clearAppData() {
-        if(confirm("Θα διαγραφούν όλα τα δεδομένα (βάρδιες, άδειες, μισθός) από αυτή τη συσκευή. Είσαι σίγουρος;")) {
-            localStorage.clear();
-            location.reload();
-        }
+        if(confirm("Θα διαγραφούν τα πάντα! Είσαι σίγουρος;")) { localStorage.clear(); location.reload(); }
     }
 
     render();

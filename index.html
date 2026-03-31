@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work Tracker Pro v4 - Full</title>
+    <title>Work Tracker Pro v4 - Final</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
@@ -12,7 +12,7 @@
         }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; }
         .tabs { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; padding: 5px; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.75rem; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.7rem; }
         .tab-btn.active { color: var(--pri); background: #333; }
         .header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .platoon-selector { background: #1a1a1a; color: var(--pri); border: 1px solid #444; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; }
@@ -29,6 +29,8 @@
         .worked { outline: 2px solid var(--green); outline-offset: -2px; }
         .worked::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(46, 204, 113, 0.1) 5px, rgba(46, 204, 113, 0.1) 10px); }
         .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.65); font-size: 1rem; font-weight: 900; color: white; z-index: 20; }
+        .box { background: #1a1a1a; margin: 10px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: #1a1a1a; width: 90%; padding: 20px; border-radius: 20px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
         .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-bottom: 8px; cursor: pointer; }
@@ -44,6 +46,7 @@
 
 <div class="tabs">
     <button id="tab-cal-btn" class="tab-btn active" onclick="showTab('calendar')">ΗΜΕΡΟΛΟΓΙΟ</button>
+    <button id="tab-mis-btn" class="tab-btn" onclick="showTab('mishodosia')">ΜΙΣΘΟΔΟΣΙΑ</button>
     <button id="tab-lea-btn" class="tab-btn" onclick="showTab('leaves')">ΑΔΕΙΕΣ</button>
 </div>
 
@@ -62,30 +65,44 @@
             <button onclick="changeMonth(1)" style="background:none; color:white; border:none;">❯</button>
         </div>
     </div>
-
     <div class="days-header">
-        <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name">ΚΥ</div>
+        <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name" style="color:var(--syn)">ΚΥ</div>
     </div>
     <div class="grid" id="grid"></div>
     <button class="btn" style="background:#333; color:var(--event); margin:15px 12px; width:calc(100% - 24px);" onclick="toggleEvents()">📅 ΕΜΦΑΝΙΣΗ ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ / ΣΧΟΛΙΩΝ</button>
 </div>
 
-<div id="tab-leaves" style="display:none; padding:20px;">
-    <h4 style="color:var(--pri)">Προγραμματισμένη Άδεια:</h4>
-    <input type="text" id="plannedLeave" placeholder="π.χ. Β' Μαχίμων" oninput="savePlannedLeave()" style="width:100%; padding:12px; background:#222; color:white; border:1px solid #444; border-radius:8px;">
-    <div id="leaveStats" style="margin-top:20px; font-size:0.9rem; color:#aaa;"></div>
+<div id="tab-mishodosia" style="display:none;">
+    <div class="box">
+        <h3 style="color:var(--pri); margin-top:0;">Στατιστικά Μήνα</h3>
+        <div class="stat-row"><span>Νυχτερινά (Ώρες):</span> <b id="stat-night">0</b></div>
+        <div class="stat-row"><span>Πενθήμερα:</span> <b id="stat-five">0</b></div>
+        <div class="stat-row"><span>Γήπεδα:</span> <b id="stat-stadium">0</b></div>
+        <div class="stat-row"><span>Σύνολο Υπηρεσιών:</span> <b id="stat-total">0</b></div>
+    </div>
+    <p style="padding:15px; font-size:0.75rem; color:#666;">* Τα νυχτερινά υπολογίζονται αυτόματα όταν μαρκάρετε "ΔΟΥΛΕΨΑ" σε Βραδινή υπηρεσία (8 ώρες) ή σε Απογευματινή (2 ώρες).</p>
+</div>
+
+<div id="tab-leaves" style="display:none;">
+    <div class="box">
+        <h3 style="color:var(--purp); margin-top:0;">Διαχείριση Αδειών</h3>
+        <div class="stat-row"><span>Κανονική Άδεια (ΚΑ):</span> <b id="count-KA">0</b></div>
+        <div class="stat-row"><span>Βραχεία Άδεια (ΒΑ):</span> <b id="count-BA">0</b></div>
+        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+        <h4 style="margin-bottom:10px;">Προγραμματισμός:</h4>
+        <input type="text" id="plannedLeave" placeholder="π.χ. Β' Μαχίμων" oninput="savePlannedLeave()" style="width:100%; padding:12px; background:#222; color:white; border:1px solid #444; border-radius:8px; box-sizing:border-box;">
+    </div>
 </div>
 
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3 id="dateDisplay" style="margin-top:0"></h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-            <button class="btn" onclick="toggleWorked()" style="background:var(--green); color:white; margin:0">ΔΟΥΛΕΨΑ ✓</button>
-            <button class="btn" onclick="toggleStadium()" style="background:var(--event); color:black; margin:0">ΓΗΠΕΔΟ 🏟️</button>
+            <button class="btn" id="workedBtn" onclick="toggleWorked()" style="background:var(--green); color:white; margin:0">ΔΟΥΛΕΨΑ ✓</button>
+            <button class="btn" id="stadiumBtn" onclick="toggleStadium()" style="background:var(--event); color:black; margin:0">ΓΗΠΕΔΟ 🏟️</button>
         </div>
         <input type="text" id="dayNote" placeholder="Σχόλιο..." style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box; background:#222; color:white; border:1px solid #444; border-radius:8px;">
         <button class="btn" onclick="saveDayNote()" style="background:var(--pri); color:black;">ΑΠΟΘΗΚΕΥΣΗ</button>
-        
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-top:10px;">
             <div class="cell shift-PR" style="padding:10px; aspect-ratio:auto" onclick="updateShift('PR')">ΠΡ</div>
             <div class="cell shift-SY" style="padding:10px; aspect-ratio:auto" onclick="updateShift('SY')">ΣΥ</div>
@@ -109,9 +126,7 @@
     const baseS = ["VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
-    const platoonOffsets = {
-        "351": 5,  "352": 10, "353": 15, "354": 0, "355": 20
-    };
+    const platoonOffsets = { "351": 5, "352": 10, "353": 15, "354": 0, "355": 20 };
 
     const staticEvents = [
         { s: "2026-02-28", e: "2026-02-28", t: "ΤΕΜΠΗ" },
@@ -124,14 +139,12 @@
         { s: "2026-08-01", e: "2026-08-20", t: "Γ' ΜΑΧΙΜΩΝ" }
     ];
 
-    let currentPlatoon = localStorage.getItem('selectedPlatoon') || "354";
-    document.getElementById('platoonSelect').value = currentPlatoon;
-    
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
     let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
     let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
     let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
+    let currentPlatoon = localStorage.getItem('selectedPlatoon') || "354";
     let showEvents = localStorage.getItem('showEvents') === 'true';
     let activeKey = null;
 
@@ -147,6 +160,9 @@
         let daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
         let pOffset = platoonOffsets[currentPlatoon];
 
+        let nightHours = 0, fiveDays = 0, stadCount = 0, workedTotal = 0;
+        let kaCount = 0, baCount = 0;
+
         for(let i=1; i<=daysInMonth; i++) {
             let curr = new Date(d.getFullYear(), d.getMonth(), i);
             let dateStr = curr.toISOString().split('T')[0];
@@ -158,10 +174,22 @@
             cell.className = `cell shift-${s} ${workedDays[dateStr] ? 'worked' : ''}`;
             
             let content = `<span class="num">${i}</span>`;
-            if(leaveDays[dateStr]) content += `<div class="leave-overlay">${leaveDays[dateStr]}</div>`;
-            else content += `<span class="shft">${s}</span><span class="loc">${(s==='ΑΔ'||s==='Ρεπ')?'':baseL[idx]}</span>`;
+            if(leaveDays[dateStr]) {
+                content += `<div class="leave-overlay">${leaveDays[dateStr]}</div>`;
+                if(leaveDays[dateStr] === 'ΚΑ') kaCount++;
+                if(leaveDays[dateStr] === 'ΒΑ') baCount++;
+            } else {
+                content += `<span class="shft">${s}</span><span class="loc">${(s==='ΑΔ'||s==='Ρεπ')?'':baseL[idx]}</span>`;
+            }
             
-            if(stadiumDays[dateStr]) content += `<span class="stadium-mark">🏟️</span>`;
+            if(stadiumDays[dateStr]) { content += `<span class="stadium-mark">🏟️</span>`; stadCount++; }
+
+            if(workedDays[dateStr]) {
+                workedTotal++;
+                if(s === 'VR') nightHours += 8;
+                if(s === 'AP') nightHours += 2;
+                if(curr.getDay() === 0 || curr.getDay() === 6) fiveDays++;
+            }
 
             if(showEvents) {
                 let note = dayNotes[dateStr];
@@ -174,11 +202,23 @@
             cell.onclick = () => openModal(dateStr, i);
             grid.appendChild(cell);
         }
+        
+        // Update Stats
+        document.getElementById('stat-night').innerText = nightHours;
+        document.getElementById('stat-five').innerText = fiveDays;
+        document.getElementById('stat-stadium').innerText = stadCount;
+        document.getElementById('stat-total').innerText = workedTotal;
+        document.getElementById('count-KA').innerText = kaCount;
+        document.getElementById('count-BA').innerText = baCount;
         document.getElementById('plannedLeave').value = localStorage.getItem('plannedLeave') || "";
     }
 
-    function changePlatoon() { currentPlatoon = document.getElementById('platoonSelect').value; localStorage.setItem('selectedPlatoon', currentPlatoon); render(); }
-    function openModal(key, day) { activeKey = key; document.getElementById('dateDisplay').innerText = day + " " + document.getElementById('monthLabel').innerText; document.getElementById('dayNote').value = dayNotes[key] || ""; document.getElementById('modal').style.display = 'flex'; }
+    function openModal(key, day) {
+        activeKey = key;
+        document.getElementById('dateDisplay').innerText = day + " " + document.getElementById('monthLabel').innerText;
+        document.getElementById('dayNote').value = dayNotes[key] || "";
+        document.getElementById('modal').style.display = 'flex';
+    }
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
     function saveDayNote() { let val = document.getElementById('dayNote').value.trim(); if(val) dayNotes[activeKey] = val; else delete dayNotes[activeKey]; localStorage.setItem('dayNotes', JSON.stringify(dayNotes)); render(); closeModal(); }
     function toggleWorked() { workedDays[activeKey] = !workedDays[activeKey]; localStorage.setItem('workedDays', JSON.stringify(workedDays)); render(); }
@@ -187,14 +227,18 @@
     function updateShift(val) { userShifts[activeKey] = val; localStorage.setItem('userShifts', JSON.stringify(userShifts)); render(); closeModal(); }
     function toggleEvents() { showEvents = !showEvents; localStorage.setItem('showEvents', showEvents); render(); }
     function changeMonth(n) { d.setMonth(d.getMonth()+n); render(); }
-    function showTab(t) { 
-        document.getElementById('tab-calendar').style.display = t==='calendar'?'block':'none'; 
-        document.getElementById('tab-leaves').style.display = t==='leaves'?'block':'none'; 
-        document.getElementById('tab-cal-btn').classList.toggle('active', t==='calendar');
-        document.getElementById('tab-lea-btn').classList.toggle('active', t==='leaves');
-        render(); 
-    }
+    function changePlatoon() { currentPlatoon = document.getElementById('platoonSelect').value; localStorage.setItem('selectedPlatoon', currentPlatoon); render(); }
     function savePlannedLeave() { localStorage.setItem('plannedLeave', document.getElementById('plannedLeave').value); }
+    
+    function showTab(t) {
+        document.getElementById('tab-calendar').style.display = t==='calendar'?'block':'none';
+        document.getElementById('tab-mishodosia').style.display = t==='mishodosia'?'block':'none';
+        document.getElementById('tab-leaves').style.display = t==='leaves'?'block':'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + t.substring(0,3) + '-btn').classList.add('active');
+        render();
+    }
+
     render();
 </script>
 </body>

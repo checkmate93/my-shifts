@@ -1,599 +1,629 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work & Leaves Elite v10</title>
-    <style>
-        :root {
-            --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
-            --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #4a4a4a; --green: #2ecc71; --purp: #a55eea;
-            --event: #f1c40f; --gold: #FFD700;
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; }
-        .tabs { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; padding: 5px; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #222; color: #666; border-radius: 8px; font-weight: bold; font-size: 0.65rem; }
-        .tab-btn.active { color: var(--pri); background: #333; }
-        .header { padding: 10px 15px; display: flex; flex-direction: column; gap: 10px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .month-label { font-weight: 800; font-size: 0.9rem; text-transform: uppercase; color: var(--pri); }
-        .platoon-select { width: 100%; background: #222; color: var(--pri); border: 1px solid #444; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; }
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
-        .days-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px 5px 10px; }
-        .day-name { text-align: center; font-size: 0.65rem; color: #555; font-weight: bold; }
-        .cell { aspect-ratio: 1/1.5; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #222; position: relative; font-size: 0.75rem; overflow: hidden; cursor: pointer; }
-        .num { position: absolute; top: 2px; left: 3px; font-size: 0.65rem; opacity: 0.5; font-weight: bold; z-index: 10; }
-        .shft { font-weight: 900; font-size: 0.85rem; z-index: 10; }
-        .loc { font-size: 0.52rem; font-weight: bold; opacity: 0.9; text-align: center; margin-top: 3px; z-index: 10; line-height: 0.9; padding: 0 2px; }
-        .event-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--event); z-index: 12; }
-        .event-text { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 0.4rem; text-align: center; background: rgba(0,0,0,0.8); color: var(--event); font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 13; }
-        .operational-text { position: absolute; bottom: 0px; left: 0; right: 0; font-size: 0.38rem; text-align: center; background: rgba(0,0,0,0.85); color: var(--gold); font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 14; text-shadow: 0px 0px 2px #000; padding: 1px 0; line-height: 1.2; }
-        .has-note .operational-text { bottom: 12px; }
-        .worked { position: relative; outline: 2px solid var(--green); outline-offset: -2px; }
-        .worked::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(46, 204, 113, 0.1) 5px, rgba(46, 204, 113, 0.1) 10px); z-index: 1; }
-        .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); font-size: 1rem; font-weight: 900; color: white; z-index: 15; }
-        .stadium-mark { position: absolute; top: 2px; right: 2px; font-size: 0.6rem; z-index: 11; }
-        .box { background: #1a1a1a; margin: 12px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
-        .btn-action { background: #333; color: white; font-weight: bold; padding: 12px; border-radius: 10px; border: 1px solid #444; width: calc(100% - 24px); margin: 5px 12px; cursor: pointer; font-size: 0.75rem; }
-        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: #1a1a1a; width: 85%; padding: 20px; border-radius: 20px; border: 1px solid #333; text-align: center; max-height: 85vh; overflow-y: auto; }
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .shift-PR { background: var(--pri); color: #000; }
-        .shift-SY { background: var(--syn); color: #fff; }
-        .shift-AP { background: var(--apo); color: #fff; }
-        .shift-VR { background: var(--vrad); color: #fff; border: 1px solid #444; }
-        .shift-ΑΔ { background: var(--repo); color: #fff; }
-        .doc-paper { background: #fdfdfd; color: #000; padding: 20px; border-radius: 4px; font-family: 'Georgia', serif; }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .setting-row input[type="number"] { width: 70px; background: #222; border: 1px solid #444; color: var(--pri); padding: 5px; border-radius: 5px; text-align: center; font-weight: bold; }
-        .setting-row input[type="color"] { width: 40px; height: 30px; border: none; background: none; cursor: pointer; }
-        .leave-input { background:transparent; border:none; color:white; font-size:1.1rem; font-weight:bold; width:40px; text-align:center; outline: none; }
-        textarea { outline: none; }
-        textarea:focus { border-color: var(--pri) !important; }
-        .info-section { margin: 12px; padding: 15px; background: #1a1a1a; border: 1px solid #444; border-radius: 12px; }
-        .info-section h4 { color: var(--gold); margin: 0 0 8px 0; font-size: 0.8rem; }
-        .info-section p, .info-section li { font-size: 0.75rem; color: #ccc; line-height: 1.6; margin: 2px 0; }
-        .info-section ul { padding-left: 15px; margin: 5px 0; }
-        .info-section .warn { color: #ff4444; font-weight: bold; }
-    </style>
-</head>
-<body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Work & Leaves Elite v11</title>
+  <style>
+    :root{
+      --bg:#121212;--card:#1e1e1e;--txt:#fff;
+      --pri:#70d1ff;--syn:#ff2e2e;--apo:#c45b00;--vrad:#000;--repo:#4a4a4a;
+      --green:#2ecc71;--purp:#a55eea;--event:#f1c40f;--gold:#FFD700;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding-bottom:30px}
+    .tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #333;position:sticky;top:0;z-index:1000;padding:5px;gap:5px}
+    .tab-btn{flex:1;padding:12px;border:none;background:#222;color:#666;border-radius:8px;font-weight:700;font-size:.65rem}
+    .tab-btn.active{color:var(--pri);background:#333}
 
-<div class="tabs">
+    .header{padding:10px 15px;display:flex;flex-direction:column;gap:10px}
+    .header-top{display:flex;justify-content:space-between;align-items:center}
+    .month-label{font-weight:800;font-size:.9rem;text-transform:uppercase;color:var(--pri)}
+    .platoon-select{width:100%;background:#222;color:var(--pri);border:1px solid #444;padding:10px;border-radius:8px;font-weight:700;font-size:.85rem}
+
+    .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 10px}
+    .days-header{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px 5px}
+    .day-name{text-align:center;font-size:.65rem;color:#555;font-weight:700}
+
+    .cell{aspect-ratio:1/1.5;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #222;position:relative;font-size:.75rem;overflow:hidden;cursor:pointer}
+    .num{position:absolute;top:2px;left:3px;font-size:.65rem;opacity:.5;font-weight:800;z-index:10}
+    .shft{font-weight:900;font-size:.85rem;z-index:10}
+    .loc{font-size:.52rem;font-weight:700;opacity:.9;text-align:center;margin-top:3px;z-index:10;line-height:.9;padding:0 2px}
+
+    .event-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--event);z-index:12}
+    .event-text{position:absolute;bottom:3px;left:0;right:0;font-size:.4rem;text-align:center;background:rgba(0,0,0,.8);color:var(--event);font-weight:800;white-space:nowrap;overflow:hidden;z-index:13}
+    .operational-text{position:absolute;bottom:0;left:0;right:0;font-size:.38rem;text-align:center;background:rgba(0,0,0,.85);color:var(--gold);font-weight:900;white-space:nowrap;overflow:hidden;z-index:14;text-shadow:0 0 2px #000;padding:1px 0;line-height:1.2}
+    .has-note .operational-text{bottom:12px}
+
+    .worked{position:relative;outline:2px solid var(--green);outline-offset:-2px}
+    .worked::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(46,204,113,.1) 5px,rgba(46,204,113,.1) 10px);z-index:1}
+    .leave-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);font-size:1rem;font-weight:900;color:#fff;z-index:15}
+    .stadium-mark{position:absolute;top:2px;right:2px;font-size:.6rem;z-index:11}
+
+    .box{background:#1a1a1a;margin:12px;padding:15px;border-radius:12px;border:1px solid #333}
+    .btn-action{background:#333;color:#fff;font-weight:800;padding:12px;border-radius:10px;border:1px solid #444;width:calc(100% - 24px);margin:5px 12px;cursor:pointer;font-size:.75rem}
+
+    #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;justify-content:center;align-items:center}
+    .modal-content{background:#1a1a1a;width:85%;padding:20px;border-radius:20px;border:1px solid #333;text-align:center;max-height:85vh;overflow-y:auto}
+    .btn{padding:12px;border-radius:8px;border:none;font-weight:800;cursor:pointer}
+
+    .shift-PR{background:var(--pri);color:#000}
+    .shift-SY{background:var(--syn);color:#fff}
+    .shift-AP{background:var(--apo);color:#fff}
+    .shift-VR{background:var(--vrad);color:#fff;border:1px solid #444}
+    .shift-ΑΔ{background:var(--repo);color:#fff}
+
+    .doc-paper{background:#fdfdfd;color:#000;padding:20px;border-radius:4px;font-family:Georgia,serif}
+    .setting-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid #333;padding-bottom:10px}
+    .setting-row input[type="number"]{width:90px;background:#222;border:1px solid #444;color:var(--pri);padding:5px;border-radius:5px;text-align:center;font-weight:800}
+    .setting-row input[type="color"]{width:40px;height:30px;border:none;background:none;cursor:pointer}
+
+    .leave-input{background:transparent;border:none;color:#fff;font-size:1.1rem;font-weight:900;width:40px;text-align:center;outline:none}
+    textarea{outline:none}
+    textarea:focus{border-color:var(--pri)!important}
+  </style>
+</head>
+
+<body>
+  <div class="tabs">
     <button class="tab-btn active" id="btn-cal" onclick="showTab('calendar')">ΗΜΕΡΟΛΟΓΙΟ</button>
     <button class="tab-btn" id="btn-lea" onclick="showTab('leaves')">ΣΧΟΛΙΑ</button>
     <button class="tab-btn" id="btn-set" onclick="showTab('settings')">ΡΥΘΜΙΣΕΙΣ</button>
-</div>
+  </div>
 
-<div id="tab-calendar">
+  <!-- TAB: ΗΜΕΡΟΛΟΓΙΟ -->
+  <div id="tab-calendar">
     <div class="header">
-        <select id="platoonSelect" class="platoon-select" onchange="changePlatoon()">
-            <option value="351">ΔΙΜΟΙΡΙΑ 351</option>
-            <option value="352">ΔΙΜΟΙΡΙΑ 352</option>
-            <option value="353">ΔΙΜΟΙΡΙΑ 353</option>
-            <option value="354">ΔΙΜΟΙΡΙΑ 354</option>
-            <option value="355">ΔΙΜΟΙΡΙΑ 355</option>
-        </select>
-        <div class="header-top">
-            <button onclick="changeMonth(-1)" style="background:none; color:white; border:none; font-size:1.5rem;">❮</button>
-            <div id="monthLabel" class="month-label"></div>
-            <button onclick="changeMonth(1)" style="background:none; color:white; border:none; font-size:1.5rem;">❯</button>
-        </div>
+      <select id="platoonSelect" class="platoon-select" onchange="changePlatoon()">
+        <option value="351">ΔΙΜΟΙΡΙΑ 351</option>
+        <option value="352">ΔΙΜΟΙΡΙΑ 352</option>
+        <option value="353">ΔΙΜΟΙΡΙΑ 353</option>
+        <option value="354">ΔΙΜΟΙΡΙΑ 354</option>
+        <option value="355">ΔΙΜΟΙΡΙΑ 355</option>
+      </select>
+
+      <div class="header-top">
+        <button onclick="changeMonth(-1)" style="background:none;color:white;border:none;font-size:1.5rem;">❮</button>
+        <div id="monthLabel" class="month-label"></div>
+        <button onclick="changeMonth(1)" style="background:none;color:white;border:none;font-size:1.5rem;">❯</button>
+      </div>
     </div>
+
     <div class="days-header">
-        <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name" style="color:#ff4d4d">ΚΥ</div>
+      <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name" style="color:#ff4d4d">ΚΥ</div>
     </div>
+
     <div class="grid" id="grid"></div>
+
     <button id="toggleEventsBtn" class="btn-action" onclick="toggleEvents()">📅 ΕΜΦΑΝΙΣΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ</button>
-    <button class="btn-action" style="background:var(--green); border:none;" onclick="togglePayroll()">📊 ΥΠΟΛΟΓΙΣΜΟΣ ΜΙΣΘΟΔΟΣΙΑΣ</button>
-    <div id="payrollContent" class="box" style="display:none; border: 2px solid var(--green);">
-        <div id="statsDetails" style="font-size: 0.8rem; line-height: 2;"></div>
-        <div style="text-align: center; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-            <div style="font-size: 0.7rem; color: #888;">ΣΥΝΟΛΟ ΜΕ ΒΑΣΙΚΟ:</div>
-            <div style="font-size: 2rem; font-weight: 900; color: var(--green);"><span id="grandTotal">0</span>€</div>
-        </div>
-    </div>
-</div>
+    <button class="btn-action" style="background:var(--green);border:none;" onclick="togglePayroll()">📊 ΥΠΟΛΟΓΙΣΜΟΣ ΜΙΣΘΟΔΟΣΙΑΣ</button>
 
-<!-- TAB: ΣΧΟΛΙΑ -->
-<div id="tab-leaves" style="display:none; padding: 10px;">
-    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-        <div style="flex:1; background: #222; padding: 10px; border-radius: 12px; border: 1px solid var(--purp); text-align: center;">
-            <div style="font-size: 0.6rem; color: #888;">ΚΑΝΟΝΙΚΗ (ΚΑ)</div>
-            <input type="number" id="baseKA" onchange="updateLeaveConfig()" class="leave-input">
-            <div style="font-size: 0.7rem; color: var(--purp);">Υπόλ: <span id="remKA">0</span></div>
-        </div>
-        <div style="flex:1; background: #222; padding: 10px; border-radius: 12px; border: 1px solid var(--purp); text-align: center;">
-            <div style="font-size: 0.6rem; color: #888;">ΒΡΑΧΕΙΑ (ΒΑ)</div>
-            <input type="number" id="baseBA" onchange="updateLeaveConfig()" class="leave-input">
-            <div style="font-size: 0.7rem; color: var(--purp);">Υπόλ: <span id="remBA">0</span></div>
-        </div>
-        <div style="flex:1; background: #222; padding: 10px; border-radius: 12px; border: 1px solid var(--pri); text-align: center;">
-            <div style="font-size: 0.6rem; color: #888;">ΔΙΑΤΑΓΩΝ (ΗΑ)</div>
-            <input type="number" id="baseHA" onchange="updateLeaveConfig()" class="leave-input" style="color: var(--pri);">
-            <div style="font-size: 0.7rem; color: var(--pri);">Υπόλ: <span id="remHA">0</span></div>
-        </div>
+    <div id="payrollContent" class="box" style="display:none;border:2px solid var(--green);">
+      <div id="statsDetails" style="font-size:.8rem;line-height:2;"></div>
+      <div style="text-align:center;margin-top:10px;border-top:1px solid #333;padding-top:10px;">
+        <div style="font-size:.7rem;color:#888;">ΣΥΝΟΛΟ ΜΕ ΒΑΣΙΚΟ:</div>
+        <div style="font-size:2rem;font-weight:900;color:var(--green);"><span id="grandTotal">0</span>€</div>
+      </div>
     </div>
+  </div>
 
-    <!-- Σταθερές Πληροφορίες Προγραμματισμού -->
-    <div class="info-section" style="border-color: var(--gold);">
-        <h4>📋 Περίοδοι προγραμ. Μαχίμων – Οδηγών</h4>
-        <p>Α' περίοδος: 22/6 - 11/7</p>
-        <p>Β' περίοδος: 12/7 - 31/7</p>
-        <p>Γ' περίοδος: 1/8 - 20/8</p>
-        <p>Δ' περίοδος: 21/8 - 9/9</p>
+  <!-- TAB: ΣΧΟΛΙΑ -->
+  <div id="tab-leaves" style="display:none;padding:10px;">
+
+    <div style="display:flex;gap:8px;margin-bottom:15px;">
+      <div style="flex:1;background:#222;padding:10px;border-radius:12px;border:1px solid var(--purp);text-align:center;">
+        <div style="font-size:.6rem;color:#888;">ΚΑΝΟΝΙΚΗ (ΚΑ)</div>
+        <input type="number" id="baseKA" onchange="updateLeaveConfig()" class="leave-input">
+        <div style="font-size:.7rem;color:var(--purp);">Υπόλ: <span id="remKA">0</span></div>
+      </div>
+
+      <div style="flex:1;background:#222;padding:10px;border-radius:12px;border:1px solid var(--purp);text-align:center;">
+        <div style="font-size:.6rem;color:#888;">ΒΡΑΧΕΙΑ (ΒΑ)</div>
+        <input type="number" id="baseBA" onchange="updateLeaveConfig()" class="leave-input">
+        <div style="font-size:.7rem;color:var(--purp);">Υπόλ: <span id="remBA">0</span></div>
+      </div>
+
+      <div style="flex:1;background:#222;padding:10px;border-radius:12px;border:1px solid var(--pri);text-align:center;">
+        <div style="font-size:.6rem;color:#888;">ΔΙΑΤΑΓΩΝ (ΗΑ)</div>
+        <input type="number" id="baseHA" onchange="updateLeaveConfig()" class="leave-input" style="color:var(--pri);">
+        <div style="font-size:.7rem;color:var(--pri);">Υπόλ: <span id="remHA">0</span></div>
+      </div>
     </div>
 
-    <div class="info-section" style="border-color: var(--pri);">
-        <h4>📋 Περίοδοι προγραμ. ΒΑΘΜΟΦΟΡΩΝ</h4>
-        <p>Α' περίοδος: 1/7 - 20/7</p>
-        <p>Β' περίοδος: 21/7 - 9/8</p>
-        <p>Γ' περίοδος: 10/8 - 30/8</p>
+    <!-- Σημειώσεις έτους (editable, template μόνο για 2026) -->
+    <div class="doc-paper" style="margin:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <h3 style="margin:0;font-size:.9rem;text-decoration:underline;">ΣΗΜΕΙΩΣΕΙΣ ΕΤΟΥΣ (<span id="yearLabel"></span>)</h3>
+        <button class="btn" style="background:var(--pri);color:black;font-size:.75rem;padding:10px 12px;" onclick="saveYearNotes()">💾 ΑΠΟΘΗΚΕΥΣΗ</button>
+      </div>
+      <textarea id="yearNotes" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:220px;border:1px solid #ccc;background:#fff;color:#000;font-family:monospace;font-size:.82rem;line-height:1.5;padding:10px;border-radius:6px;resize:vertical;"></textarea>
+      <div style="margin-top:8px;font-size:.72rem;color:#444;">
+        Σημείωση: Για το 2026 γεμίζει αυτόματα με πρότυπο. Για άλλα έτη είναι κενό (ώστε να το γράψετε για 2027/2028).
+      </div>
     </div>
 
-    <div class="info-section" style="border-color: var(--purp);">
-        <h4>🎄 Περίοδοι προγραμ. ΕΟΡΤΩΝ</h4>
-        <p>16/2 – 25/2 (ΑΠΟΚΡΙΕΣ)</p>
-        <p>6/4 – 15/4 (ΠΑΣΧΑ)</p>
-        <p>18/12 – 27/12 (ΧΡΙΣΤΟΥΓΕΝΝΑ)</p>
-        <p>28/12 – 6/1 (ΠΡΩΤΟΧΡΟΝΙΑ)</p>
+    <!-- Συγκεντρωτικά μήνα -->
+    <div class="doc-paper" style="margin:12px;">
+      <h3 style="text-align:center;text-decoration:underline;font-size:.9rem;margin-top:0;">ΣΧΟΛΙΑ ΜΗΝΑ</h3>
+      <div id="dayNotesContent" style="font-size:.85rem;line-height:1.6;color:#000;"></div>
     </div>
 
-    <div class="info-section" style="border-color: #ff4444;">
-        <h4 style="color: #ff4444;">⛔ ΔΕΝ ΠΡΟΓΡΑΜΜΑΤΙΖΟΥΜΕ ΑΔΕΙΕΣ</h4>
-        <p>28/2 (ΕΠΕΤΕΙΟΣ ΤΕΜΠΩΝ)</p>
-        <p>25/4 (ΤΕΛΙΚΟΣ ΚΥΠΕΛΛΟΥ)</p>
-        <p>21/5 – 25/5 (FINAL 4)</p>
-        <p>15/11 – 18/11 (ΠΟΛΥΤΕΧΝΕΙΟ)</p>
-        <p>4/12 - 7/12 (ΓΡΗΓΟΡΟΠΟΥΛΟΣ)</p>
+    <!-- Ελεύθερο κείμενο μήνα -->
+    <div style="margin:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 5px;">
+        <span style="font-size:.8rem;font-weight:800;color:var(--pri);">📝 ΕΛΕΥΘΕΡΕΣ ΣΗΜΕΙΩΣΕΙΣ ΜΗΝΑ</span>
+        <button class="btn" style="background:var(--pri);color:black;padding:8px 15px;font-size:.7rem;" onclick="saveFreeTextNotes(this)">💾 ΑΠΟΘΗΚΕΥΣΗ</button>
+      </div>
+      <textarea id="freeTextNotes" style="width:100%;box-sizing:border-box;min-height:200px;border:1px solid #444;background:#1a1a1a;color:#ddd;font-family:monospace;font-size:.8rem;padding:12px;line-height:1.5;resize:vertical;border-radius:8px;" placeholder="Γράψτε τις σημειώσεις σας εδώ..."></textarea>
     </div>
+  </div>
 
-    <!-- Σχόλια Ημερών -->
-    <div class="doc-paper" style="margin-top: 15px;">
-        <h3 style="text-align: center; text-decoration: underline; font-size: 0.9rem; margin-top: 0;">ΣΧΟΛΙΑ ΗΜΕΡΩΝ ΜΗΝΑ</h3>
-        <div id="dayNotesContent" style="font-size: 0.85rem; line-height: 1.6; color: #000;"></div>
-    </div>
-
-    <!-- Ελεύθερο Κείμενο -->
-    <div style="margin-top: 15px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
-            <span style="font-size: 0.8rem; font-weight: bold; color: var(--pri);">📝 ΕΛΕΥΘΕΡΕΣ ΣΗΜΕΙΩΣΕΙΣ</span>
-            <button class="btn" style="background: var(--pri); color: black; padding: 8px 15px; font-size: 0.7rem;" onclick="saveFreeTextNotes()">💾 ΑΠΟΘΗΚΕΥΣΗ</button>
-        </div>
-        <textarea id="freeTextNotes" style="width: 100%; box-sizing: border-box; min-height: 200px; border: 1px solid #444; background: #1a1a1a; color: #ddd; font-family: monospace; font-size: 0.8rem; padding: 12px; line-height: 1.5; resize: vertical; border-radius: 8px;" placeholder="Γράψτε τις σημειώσεις σας εδώ..."></textarea>
-    </div>
-</div>
-
-<!-- TAB: ΡΥΘΜΙΣΕΙΣ -->
-<div id="tab-settings" style="display:none; padding: 10px;">
+  <!-- TAB: ΡΥΘΜΙΣΕΙΣ -->
+  <div id="tab-settings" style="display:none;padding:10px;">
     <div class="box">
-        <h4 style="color:var(--green); margin-top:0;">ΟΙΚΟΝΟΜΙΚΕΣ ΡΥΘΜΙΣΕΙΣ</h4>
-        <div class="setting-row"><span>Βασικός Μισθός (€)</span><input type="number" id="setBase" onchange="saveSettings()"></div>
-        <div class="setting-row"><span>Νυχτερινό (ανά 8ωρο)</span><input type="number" step="0.01" id="setNight" onchange="saveSettings()"></div>
-        <div class="setting-row"><span>Πενθήμερο (€)</span><input type="number" step="0.01" id="setPent" onchange="saveSettings()"></div>
-        <div class="setting-row"><span>Γήπεδο (€)</span><input type="number" step="0.01" id="setStad" onchange="saveSettings()"></div>
+      <h4 style="color:var(--green);margin-top:0;">ΟΙΚΟΝΟΜΙΚΕΣ ΡΥΘΜΙΣΕΙΣ</h4>
+      <div class="setting-row"><span>Βασικός Μισθός (€)</span><input type="number" id="setBase" onchange="saveSettings()"></div>
+      <div class="setting-row"><span>Νυχτερινό (ανά 8ωρο)</span><input type="number" step="0.01" id="setNight" onchange="saveSettings()"></div>
+      <div class="setting-row"><span>Πενθήμερο (€)</span><input type="number" step="0.01" id="setPent" onchange="saveSettings()"></div>
+      <div class="setting-row"><span>Γήπεδο (€)</span><input type="number" step="0.01" id="setStad" onchange="saveSettings()"></div>
     </div>
-    <div class="box">
-        <h4 style="color:var(--pri); margin-top:0;">ΧΡΩΜΑΤΑ ΒΑΡΔΙΑΣ</h4>
-        <div class="setting-row"><span>Πρωί (ΠΡ)</span><input type="color" id="colPR" onchange="saveColors()"></div>
-        <div class="setting-row"><span>Συντήρηση (ΣΥ)</span><input type="color" id="colSY" onchange="saveColors()"></div>
-        <div class="setting-row"><span>Απόγευμα (ΑΠ)</span><input type="color" id="colAP" onchange="saveColors()"></div>
-        <div class="setting-row"><span>Βράδυ (ΒΡ)</span><input type="color" id="colVR" onchange="saveColors()"></div>
-        <div class="setting-row"><span>Αλλαγή Διμοιρίας (ΑΔ)</span><input type="color" id="colΑΔ" onchange="saveColors()"></div>
-    </div>
-    <button class="btn-action" style="background: #c0392b; color: white; border: none; margin-top: 20px;" onclick="clearAllData()">🗑️ ΕΠΑΝΑΦΟΡΑ ΗΜΕΡΟΛΟΓΙΟΥ (Διαγραφή Όλων)</button>
-</div>
 
-<!-- MODAL -->
-<div id="modal" onclick="closeModal()">
+    <div class="box">
+      <h4 style="color:var(--pri);margin-top:0;">ΧΡΩΜΑΤΑ ΒΑΡΔΙΑΣ</h4>
+      <div class="setting-row"><span>Πρωί (ΠΡ)</span><input type="color" id="colPR" onchange="saveColors()"></div>
+      <div class="setting-row"><span>Συντήρηση (ΣΥ)</span><input type="color" id="colSY" onchange="saveColors()"></div>
+      <div class="setting-row"><span>Απόγευμα (ΑΠ)</span><input type="color" id="colAP" onchange="saveColors()"></div>
+      <div class="setting-row"><span>Βράδυ (ΒΡ)</span><input type="color" id="colVR" onchange="saveColors()"></div>
+      <div class="setting-row"><span>Αλλαγή Διμοιρίας (ΑΔ)</span><input type="color" id="colΑΔ" onchange="saveColors()"></div>
+    </div>
+
+    <button class="btn-action" style="background:#c0392b;color:white;border:none;margin-top:20px;" onclick="clearAllData()">🗑️ ΕΠΑΝΑΦΟΡΑ (Διαγραφή Όλων)</button>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="dateDisplay" style="margin:0 0 5px 0; font-size:1.1rem; color:var(--pri);"></h3>
-        <div id="modalShiftInfo" style="font-size: 0.75rem; color: #888; margin-bottom: 15px;"></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
-            <button class="btn" id="btnWorked" onclick="toggleWorked()" style="background:var(--green); color:white; font-size:0.9rem;">ΔΟΥΛΕΨΑ ✓</button>
-            <button class="btn" id="btnStadium" onclick="toggleStadium()" style="background:#f1c40f; color:black; font-size:0.9rem;">ΓΗΠΕΔΟ 🏟️</button>
-        </div>
-        <input type="text" id="dayNote" placeholder="Προσθήκη Σχολίου..." style="width:100%; box-sizing:border-box; margin-bottom:10px; padding:12px; background:#222; color:white; border:1px solid #444; border-radius:10px;">
-        <button class="btn" style="width:100%; background:var(--pri); color:black; margin-bottom:20px;" onclick="saveDayNote()">ΑΠΟΘΗΚΕΥΣΗ ΣΧΟΛΙΟΥ</button>
-        <div style="margin:10px 0 10px 0; font-weight:bold; font-size:0.75rem; color:#888; text-align:left; text-transform:uppercase;">Καταχώρηση Άδειας</div>
-        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
-            <div class="btn" style="background:var(--purp); font-size:0.8rem;" onclick="setLeave('ΚΑ')">ΚΑ</div>
-            <div class="btn" style="background:var(--purp); font-size:0.8rem;" onclick="setLeave('ΒΑ')">ΒΑ</div>
-            <div class="btn" style="background:var(--pri); font-size:0.8rem; color:black;" onclick="setLeave('ΗΑ')">ΗΑ</div>
-            <div class="btn" style="background:#444; font-size:0.8rem;" onclick="setLeave(null)">X</div>
-        </div>
-        <button class="btn" style="width:100%; margin-top:25px; background:none; color:#777; font-size:0.8rem;" onclick="closeModal()">ΚΛΕΙΣΙΜΟ</button>
+      <h3 id="dateDisplay" style="margin:0 0 5px 0;font-size:1.1rem;color:var(--pri);"></h3>
+      <div id="modalShiftInfo" style="font-size:.75rem;color:#888;margin-bottom:15px;"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <button class="btn" id="btnWorked" onclick="toggleWorked()" style="background:var(--green);color:white;font-size:.9rem;">ΔΟΥΛΕΨΑ ✓</button>
+        <button class="btn" id="btnStadium" onclick="toggleStadium()" style="background:#f1c40f;color:black;font-size:.9rem;">ΓΗΠΕΔΟ 🏟️</button>
+      </div>
+
+      <input type="text" id="dayNote" placeholder="Προσθήκη Σχολίου..." style="width:100%;box-sizing:border-box;margin-bottom:10px;padding:12px;background:#222;color:white;border:1px solid #444;border-radius:10px;">
+      <button class="btn" style="width:100%;background:var(--pri);color:black;margin-bottom:20px;" onclick="saveDayNote()">ΑΠΟΘΗΚΕΥΣΗ ΣΧΟΛΙΟΥ</button>
+
+      <div style="margin:10px 0;font-weight:800;font-size:.75rem;color:#888;text-align:left;text-transform:uppercase;">Καταχώρηση Άδειας</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <div class="btn" style="background:var(--purp);font-size:.8rem;" onclick="setLeave('ΚΑ')">ΚΑ</div>
+        <div class="btn" style="background:var(--purp);font-size:.8rem;" onclick="setLeave('ΒΑ')">ΒΑ</div>
+        <div class="btn" style="background:var(--pri);font-size:.8rem;color:black;" onclick="setLeave('ΗΑ')">ΗΑ</div>
+        <div class="btn" style="background:#444;font-size:.8rem;" onclick="setLeave(null)">X</div>
+      </div>
+
+      <button class="btn" style="width:100%;margin-top:25px;background:none;color:#777;font-size:.8rem;" onclick="closeModal()">ΚΛΕΙΣΙΜΟ</button>
     </div>
-</div>
+  </div>
 
 <script>
-    const operationalEvents = {
-        "2026-02-16":"ΑΠΟΚΡΙΕΣ","2026-02-17":"ΑΠΟΚΡΙΕΣ","2026-02-18":"ΑΠΟΚΡΙΕΣ","2026-02-19":"ΑΠΟΚΡΙΕΣ",
-        "2026-02-20":"ΑΠΟΚΡΙΕΣ","2026-02-21":"ΑΠΟΚΡΙΕΣ","2026-02-22":"ΑΠΟΚΡΙΕΣ","2026-02-23":"ΑΠΟΚΡΙΕΣ",
-        "2026-02-24":"ΑΠΟΚΡΙΕΣ","2026-02-25":"ΑΠΟΚΡΙΕΣ",
-        "2026-02-28":"ΤΕΜΠΗ",
-        "2026-04-06":"ΠΑΣΧΑ","2026-04-07":"ΠΑΣΧΑ","2026-04-08":"ΠΑΣΧΑ","2026-04-09":"ΠΑΣΧΑ",
-        "2026-04-10":"ΠΑΣΧΑ","2026-04-11":"ΠΑΣΧΑ","2026-04-12":"ΠΑΣΧΑ","2026-04-13":"ΠΑΣΧΑ",
-        "2026-04-14":"ΠΑΣΧΑ","2026-04-15":"ΠΑΣΧΑ",
-        "2026-04-25":"ΚΥΠΕΛΛΟ",
-        "2026-05-21":"FINAL4","2026-05-22":"FINAL4","2026-05-23":"FINAL4","2026-05-24":"FINAL4","2026-05-25":"FINAL4",
-        "2026-06-22":"ΜΑΧΙΜ.Α'","2026-06-23":"ΜΑΧΙΜ.Α'","2026-06-24":"ΜΑΧΙΜ.Α'","2026-06-25":"ΜΑΧΙΜ.Α'",
-        "2026-06-26":"ΜΑΧΙΜ.Α'","2026-06-27":"ΜΑΧΙΜ.Α'","2026-06-28":"ΜΑΧΙΜ.Α'","2026-06-29":"ΜΑΧΙΜ.Α'",
-        "2026-06-30":"ΜΑΧΙΜ.Α'","2026-07-01":"ΜΑΧΙΜ.Α'","2026-07-02":"ΜΑΧΙΜ.Α'","2026-07-03":"ΜΑΧΙΜ.Α'",
-        "2026-07-04":"ΜΑΧΙΜ.Α'","2026-07-05":"ΜΑΧΙΜ.Α'","2026-07-06":"ΜΑΧΙΜ.Α'","2026-07-07":"ΜΑΧΙΜ.Α'",
-        "2026-07-08":"ΜΑΧΙΜ.Α'","2026-07-09":"ΜΑΧΙΜ.Α'","2026-07-10":"ΜΑΧΙΜ.Α'","2026-07-11":"ΜΑΧΙΜ.Α'",
-        "2026-07-12":"ΜΑΧΙΜ.Β'","2026-07-13":"ΜΑΧΙΜ.Β'","2026-07-14":"ΜΑΧΙΜ.Β'","2026-07-15":"ΜΑΧΙΜ.Β'",
-        "2026-07-16":"ΜΑΧΙΜ.Β'","2026-07-17":"ΜΑΧΙΜ.Β'","2026-07-18":"ΜΑΧΙΜ.Β'","2026-07-19":"ΜΑΧΙΜ.Β'",
-        "2026-07-20":"ΜΑΧΙΜ.Β'","2026-07-21":"ΜΑΧΙΜ.Β'","2026-07-22":"ΜΑΧΙΜ.Β'","2026-07-23":"ΜΑΧΙΜ.Β'",
-        "2026-07-24":"ΜΑΧΙΜ.Β'","2026-07-25":"ΜΑΧΙΜ.Β'","2026-07-26":"ΜΑΧΙΜ.Β'","2026-07-27":"ΜΑΧΙΜ.Β'",
-        "2026-07-28":"ΜΑΧΙΜ.Β'","2026-07-29":"ΜΑΧΙΜ.Β'","2026-07-30":"ΜΑΧΙΜ.Β'","2026-07-31":"ΜΑΧΙΜ.Β'",
-        "2026-08-01":"ΜΑΧΙΜ.Γ'","2026-08-02":"ΜΑΧΙΜ.Γ'","2026-08-03":"ΜΑΧΙΜ.Γ'","2026-08-04":"ΜΑΧΙΜ.Γ'",
-        "2026-08-05":"ΜΑΧΙΜ.Γ'","2026-08-06":"ΜΑΧΙΜ.Γ'","2026-08-07":"ΜΑΧΙΜ.Γ'","2026-08-08":"ΜΑΧΙΜ.Γ'",
-        "2026-08-09":"ΜΑΧΙΜ.Γ'","2026-08-10":"ΜΑΧΙΜ.Γ'","2026-08-11":"ΜΑΧΙΜ.Γ'","2026-08-12":"ΜΑΧΙΜ.Γ'",
-        "2026-08-13":"ΜΑΧΙΜ.Γ'","2026-08-14":"ΜΑΧΙΜ.Γ'","2026-08-15":"ΜΑΧΙΜ.Γ'","2026-08-16":"ΜΑΧΙΜ.Γ'",
-        "2026-08-17":"ΜΑΧΙΜ.Γ'","2026-08-18":"ΜΑΧΙΜ.Γ'","2026-08-19":"ΜΑΧΙΜ.Γ'","2026-08-20":"ΜΑΧΙΜ.Γ'",
-        "2026-08-21":"ΜΑΧΙΜ.Δ'","2026-08-22":"ΜΑΧΙΜ.Δ'","2026-08-23":"ΜΑΧΙΜ.Δ'","2026-08-24":"ΜΑΧΙΜ.Δ'",
-        "2026-08-25":"ΜΑΧΙΜ.Δ'","2026-08-26":"ΜΑΧΙΜ.Δ'","2026-08-27":"ΜΑΧΙΜ.Δ'","2026-08-28":"ΜΑΧΙΜ.Δ'",
-        "2026-08-29":"ΜΑΧΙΜ.Δ'","2026-08-30":"ΜΑΧΙΜ.Δ'","2026-08-31":"ΜΑΧΙΜ.Δ'",
-        "2026-09-01":"ΜΑΧΙΜ.Δ'","2026-09-02":"ΜΑΧΙΜ.Δ'","2026-09-03":"ΜΑΧΙΜ.Δ'","2026-09-04":"ΜΑΧΙΜ.Δ'",
-        "2026-09-05":"ΜΑΧΙΜ.Δ'","2026-09-06":"ΜΑΧΙΜ.Δ'","2026-09-07":"ΜΑΧΙΜ.Δ'","2026-09-08":"ΜΑΧΙΜ.Δ'","2026-09-09":"ΜΑΧΙΜ.Δ'",
-        "2026-11-15":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-16":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-17":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-18":"ΠΟΛΥΤΕΧΝΕΙΟ",
-        "2026-12-04":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-05":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-06":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-07":"ΓΡΗΓΟΡ/ΛΟΣ",
-        "2026-12-18":"ΧΡΙΣΤΟΥΓ.","2026-12-19":"ΧΡΙΣΤΟΥΓ.","2026-12-20":"ΧΡΙΣΤΟΥΓ.","2026-12-21":"ΧΡΙΣΤΟΥΓ.",
-        "2026-12-22":"ΧΡΙΣΤΟΥΓ.","2026-12-23":"ΧΡΙΣΤΟΥΓ.","2026-12-24":"ΧΡΙΣΤΟΥΓ.","2026-12-25":"ΧΡΙΣΤΟΥΓ.",
-        "2026-12-26":"ΧΡΙΣΤΟΥΓ.","2026-12-27":"ΧΡΙΣΤΟΥΓ.",
-        "2026-12-28":"ΠΡΩΤΟΧΡ.","2026-12-29":"ΠΡΩΤΟΧΡ.","2026-12-30":"ΠΡΩΤΟΧΡ.","2026-12-31":"ΠΡΩΤΟΧΡ.",
-        "2027-01-01":"ΠΡΩΤΟΧΡ.","2027-01-02":"ΠΡΩΤΟΧΡ.","2027-01-03":"ΠΡΩΤΟΧΡ.",
-        "2027-01-04":"ΠΡΩΤΟΧΡ.","2027-01-05":"ΠΡΩΤΟΧΡ.","2027-01-06":"ΠΡΩΤΟΧΡ."
-    };
+  // ---------- Helpers for LOCAL date keys (no timezone bugs) ----------
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function dateKeyFromYMD(y,m,d){ return `${y}-${pad2(m)}-${pad2(d)}`; } // m: 1..12
+  function dateKeyFromDate(dt){ return dateKeyFromYMD(dt.getFullYear(), dt.getMonth()+1, dt.getDate()); }
+  function parseKey(key){
+    const [y,m,d] = key.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
 
-    // Βαθμοφόρων events
-    const vathmEvents = {
-        "2026-07-01":"ΒΑΘΜΟΦ.Α'","2026-07-02":"ΒΑΘΜΟΦ.Α'","2026-07-03":"ΒΑΘΜΟΦ.Α'","2026-07-04":"ΒΑΘΜΟΦ.Α'",
-        "2026-07-05":"ΒΑΘΜΟΦ.Α'","2026-07-06":"ΒΑΘΜΟΦ.Α'","2026-07-07":"ΒΑΘΜΟΦ.Α'","2026-07-08":"ΒΑΘΜΟΦ.Α'",
-        "2026-07-09":"ΒΑΘΜΟΦ.Α'","2026-07-10":"ΒΑΘΜΟΦ.Α'","2026-07-11":"ΒΑΘΜΟΦ.Α'","2026-07-12":"ΒΑΘΜΟΦ.Α'",
-        "2026-07-13":"ΒΑΘΜΟΦ.Α'","2026-07-14":"ΒΑΘΜΟΦ.Α'","2026-07-15":"ΒΑΘΜΟΦ.Α'","2026-07-16":"ΒΑΘΜΟΦ.Α'",
-        "2026-07-17":"ΒΑΘΜΟΦ.Α'","2026-07-18":"ΒΑΘΜΟΦ.Α'","2026-07-19":"ΒΑΘΜΟΦ.Α'","2026-07-20":"ΒΑΘΜΟΦ.Α'",
-        "2026-07-21":"ΒΑΘΜΟΦ.Β'","2026-07-22":"ΒΑΘΜΟΦ.Β'","2026-07-23":"ΒΑΘΜΟΦ.Β'","2026-07-24":"ΒΑΘΜΟΦ.Β'",
-        "2026-07-25":"ΒΑΘΜΟΦ.Β'","2026-07-26":"ΒΑΘΜΟΦ.Β'","2026-07-27":"ΒΑΘΜΟΦ.Β'","2026-07-28":"ΒΑΘΜΟΦ.Β'",
-        "2026-07-29":"ΒΑΘΜΟΦ.Β'","2026-07-30":"ΒΑΘΜΟΦ.Β'","2026-07-31":"ΒΑΘΜΟΦ.Β'",
-        "2026-08-01":"ΒΑΘΜΟΦ.Β'","2026-08-02":"ΒΑΘΜΟΦ.Β'","2026-08-03":"ΒΑΘΜΟΦ.Β'","2026-08-04":"ΒΑΘΜΟΦ.Β'",
-        "2026-08-05":"ΒΑΘΜΟΦ.Β'","2026-08-06":"ΒΑΘΜΟΦ.Β'","2026-08-07":"ΒΑΘΜΟΦ.Β'","2026-08-08":"ΒΑΘΜΟΦ.Β'",
-        "2026-08-09":"ΒΑΘΜΟΦ.Β'",
-        "2026-08-10":"ΒΑΘΜΟΦ.Γ'","2026-08-11":"ΒΑΘΜΟΦ.Γ'","2026-08-12":"ΒΑΘΜΟΦ.Γ'","2026-08-13":"ΒΑΘΜΟΦ.Γ'",
-        "2026-08-14":"ΒΑΘΜΟΦ.Γ'","2026-08-15":"ΒΑΘΜΟΦ.Γ'","2026-08-16":"ΒΑΘΜΟΦ.Γ'","2026-08-17":"ΒΑΘΜΟΦ.Γ'",
-        "2026-08-18":"ΒΑΘΜΟΦ.Γ'","2026-08-19":"ΒΑΘΜΟΦ.Γ'","2026-08-20":"ΒΑΘΜΟΦ.Γ'","2026-08-21":"ΒΑΘΜΟΦ.Γ'",
-        "2026-08-22":"ΒΑΘΜΟΦ.Γ'","2026-08-23":"ΒΑΘΜΟΦ.Γ'","2026-08-24":"ΒΑΘΜΟΦ.Γ'","2026-08-25":"ΒΑΘΜΟΦ.Γ'",
-        "2026-08-26":"ΒΑΘΜΟΦ.Γ'","2026-08-27":"ΒΑΘΜΟΦ.Γ'","2026-08-28":"ΒΑΘΜΟΦ.Γ'","2026-08-29":"ΒΑΘΜΟΦ.Γ'",
-        "2026-08-30":"ΒΑΘΜΟΦ.Γ'"
-    };
+  // ---------- Editable "Year Notes" template (ONLY for 2026) ----------
+  const defaultYearNotes = {
+    "2026": `Περίοδοι προγραμ. Μαχίμων – Οδηγών
+Α’ περίοδος: 22/6 - 11/7
+Β’ περίοδος: 12/7 - 31/7
+Γ’ περίοδος: 1/8 - 20/8
+Δ’ περίοδος: 21/8 - 9/9
 
-    let d = new Date(2026, 3, 1);
-    const anchor = new Date(2026, 2, 31);
-    const baseS = ["VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP"];
-    const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
-    const platoonOffsets = { "351": 5, "352": 10, "353": 15, "354": 0, "355": 20 };
+Περίοδοι προγραμ. ΒΑΘΜΟΦΟΡΩΝ
+Α’ περίοδος: 1/7 - 20/7
+Β’ περίοδος: 21/7 - 9/8
+Γ’ περίοδος: 10/8 - 30/8
 
-    let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
-    let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
-    let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
-    let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
-    let selectedPlatoon = localStorage.getItem('selectedPlatoon') || "354";
-    let showEvents = localStorage.getItem('showEvents') === 'true';
-    let leaveConfig = JSON.parse(localStorage.getItem('leaveConfig')) || { ka: 34, ba: 11, ha: 0 };
-    let settings = JSON.parse(localStorage.getItem('appSettings')) || { base: 1100, night: 2.81, pent: 46.00, stad: 25.00 };
-    let colors = JSON.parse(localStorage.getItem('appColors')) || { PR: "#70d1ff", SY: "#ff2e2e", AP: "#c45b00", VR: "#000000", ΑΔ: "#4a4a4a" };
-    let activeKey = null;
+Περίοδοι προγραμ. ΕΟΡΤΩΝ
+16/2 – 25/2 (ΑΠΟΚΡΙΕΣ)
+6/4 – 15/4 (ΠΑΣΧΑ)
+18/12 – 27/12 (ΧΡΙΣΤΟΥΓΕΝΝΑ)
+28/12 – 6/1 (ΠΡΩΤΟΧΡΟΝΙΑ)
 
-    function getShiftForDate(dateStr) {
-        let curr = new Date(dateStr + "T00:00:00");
-        let diff = Math.floor((curr - anchor) / 86400000);
-        let pOff = platoonOffsets[selectedPlatoon];
-        let idx = (diff + pOff) % 25;
-        if (idx < 0) idx += 25;
-        return { shift: baseS[idx], location: baseL[idx], idx: idx };
-    }
+➜ ΔΕΝ ΠΡΟΓΡΑΜΜΑΤΙΖΟΥΜΕ ΑΔΕΙΕΣ ΤΙΣ ΕΞΗΣ ΗΜΕΡΟΜΗΝΙΕΣ:
+28/2 (ΕΠΕΤΕΙΟΣ ΤΕΜΠΩΝ)
+25/4 (ΤΕΛΙΚΟΣ ΚΥΠΕΛΛΟΥ)
+21/5 – 25/5 (FINAL 4)
+15/11 – 18/11 (ΠΟΛΥΤΕΧΝΕΙΟ)
+4/12 - 7/12 (ΓΡΗΓΟΡΟΠΟΥΛΟΣ)
+`
+  };
 
-    // Πενθήμερο: Σάββατο, Κυριακή, ή Παρασκευή Βράδυ
-    function isPenthimero(dateStr, shift) {
-        let curr = new Date(dateStr + "T00:00:00");
-        let dow = curr.getDay(); // 0=Κυ, 5=Πα, 6=Σα
-        // Σάββατο ή Κυριακή = πενθήμερο
-        if (dow === 0 || dow === 6) return true;
-        // Παρασκευή βράδυ = πενθήμερο (βραδινή βάρδια Παρασκευή μετρά ως ΣΚ)
-        if (dow === 5 && shift === "VR") return true;
-        return false;
-    }
+  // ---------- Operational events (for calendar small gold labels) ----------
+  // (κρατάμε ό,τι είχαμε, μπορείς να το επεκτείνεις για 2027/2028)
+  const operationalEvents = {
+    "2026-02-16":"ΑΠΟΚΡΙΕΣ","2026-02-17":"ΑΠΟΚΡΙΕΣ","2026-02-18":"ΑΠΟΚΡΙΕΣ","2026-02-19":"ΑΠΟΚΡΙΕΣ",
+    "2026-02-20":"ΑΠΟΚΡΙΕΣ","2026-02-21":"ΑΠΟΚΡΙΕΣ","2026-02-22":"ΑΠΟΚΡΙΕΣ","2026-02-23":"ΑΠΟΚΡΙΕΣ",
+    "2026-02-24":"ΑΠΟΚΡΙΕΣ","2026-02-25":"ΑΠΟΚΡΙΕΣ",
+    "2026-02-28":"ΤΕΜΠΗ",
+    "2026-04-06":"ΠΑΣΧΑ","2026-04-07":"ΠΑΣΧΑ","2026-04-08":"ΠΑΣΧΑ","2026-04-09":"ΠΑΣΧΑ",
+    "2026-04-10":"ΠΑΣΧΑ","2026-04-11":"ΠΑΣΧΑ","2026-04-12":"ΠΑΣΧΑ","2026-04-13":"ΠΑΣΧΑ",
+    "2026-04-14":"ΠΑΣΧΑ","2026-04-15":"ΠΑΣΧΑ",
+    "2026-04-25":"ΚΥΠΕΛΛΟ",
+    "2026-05-21":"FINAL4","2026-05-22":"FINAL4","2026-05-23":"FINAL4","2026-05-24":"FINAL4","2026-05-25":"FINAL4",
+    "2026-11-15":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-16":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-17":"ΠΟΛΥΤΕΧΝΕΙΟ","2026-11-18":"ΠΟΛΥΤΕΧΝΕΙΟ",
+    "2026-12-04":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-05":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-06":"ΓΡΗΓΟΡ/ΛΟΣ","2026-12-07":"ΓΡΗΓΟΡ/ΛΟΣ",
+    "2026-12-18":"ΧΡΙΣΤΟΥΓ.","2026-12-19":"ΧΡΙΣΤΟΥΓ.","2026-12-20":"ΧΡΙΣΤΟΥΓ.","2026-12-21":"ΧΡΙΣΤΟΥΓ.",
+    "2026-12-22":"ΧΡΙΣΤΟΥΓ.","2026-12-23":"ΧΡΙΣΤΟΥΓ.","2026-12-24":"ΧΡΙΣΤΟΥΓ.","2026-12-25":"ΧΡΙΣΤΟΥΓ.",
+    "2026-12-26":"ΧΡΙΣΤΟΥΓ.","2026-12-27":"ΧΡΙΣΤΟΥΓ.",
+    "2026-12-28":"ΠΡΩΤΟΧΡ.","2026-12-29":"ΠΡΩΤΟΧΡ.","2026-12-30":"ΠΡΩΤΟΧΡ.","2026-12-31":"ΠΡΩΤΟΧΡ.",
+    "2027-01-01":"ΠΡΩΤΟΧΡ.","2027-01-02":"ΠΡΩΤΟΧΡ.","2027-01-03":"ΠΡΩΤΟΧΡ.","2027-01-04":"ΠΡΩΤΟΧΡ.","2027-01-05":"ΠΡΩΤΟΧΡ.","2027-01-06":"ΠΡΩΤΟΧΡ."
+  };
 
-    function applyStyles() {
-        const root = document.documentElement;
-        root.style.setProperty('--pri', colors.PR);
-        root.style.setProperty('--syn', colors.SY);
-        root.style.setProperty('--apo', colors.AP);
-        root.style.setProperty('--vrad', colors.VR);
-        root.style.setProperty('--repo', colors.ΑΔ);
-    }
+  // ---------- Calendar rules ----------
+  let d = new Date(2026, 3, 1);
+  const anchor = new Date(2026, 2, 31);
+  const baseS = ["VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP"];
+  const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
+  const platoonOffsets = { "351": 5, "352": 10, "353": 15, "354": 0, "355": 20 };
 
-    function render() {
-        applyStyles();
-        document.getElementById('platoonSelect').value = selectedPlatoon;
-        const grid = document.getElementById('grid'); grid.innerHTML = '';
-        const months = ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"];
-        document.getElementById('monthLabel').innerText = months[d.getMonth()] + " " + d.getFullYear();
-        
-        document.getElementById('setBase').value = settings.base;
-        document.getElementById('setNight').value = settings.night;
-        document.getElementById('setPent').value = settings.pent;
-        document.getElementById('setStad').value = settings.stad;
-        document.getElementById('colPR').value = colors.PR;
-        document.getElementById('colSY').value = colors.SY;
-        document.getElementById('colAP').value = colors.AP;
-        document.getElementById('colVR').value = colors.VR;
-        document.getElementById('colΑΔ').value = colors.ΑΔ;
-        document.getElementById('baseKA').value = leaveConfig.ka;
-        document.getElementById('baseBA').value = leaveConfig.ba;
-        document.getElementById('baseHA').value = leaveConfig.ha || 0;
+  let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
+  let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
+  let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
+  let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
+  let selectedPlatoon = localStorage.getItem('selectedPlatoon') || "354";
+  let showEvents = localStorage.getItem('showEvents') === 'true';
+  let leaveConfig = JSON.parse(localStorage.getItem('leaveConfig')) || { ka: 34, ba: 11, ha: 0 };
 
-        let firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
-        let offset = (firstDay === 0) ? 6 : firstDay - 1;
-        for (let i = 0; i < offset; i++) grid.appendChild(document.createElement('div'));
+  // ✅ Defaults όπως ζήτησες:
+  let settings = JSON.parse(localStorage.getItem('appSettings')) || { base: 1100, night: 24.00, pent: 40.00, stad: 20.00 };
 
-        let stats = { nights: 0, pent: 0, stad: 0, workedCount: 0 };
-        let daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let pOff = platoonOffsets[selectedPlatoon];
+  let colors = JSON.parse(localStorage.getItem('appColors')) || { PR: "#70d1ff", SY: "#ff2e2e", AP: "#c45b00", VR: "#000000", ΑΔ: "#4a4a4a" };
+  let activeKey = null;
 
-        for (let i = 1; i <= daysInMonth; i++) {
-            let curr = new Date(d.getFullYear(), d.getMonth(), i);
-            let dateStr = curr.toISOString().split('T')[0];
-            let diff = Math.floor((curr - anchor) / 86400000);
-            let idx = (diff + pOff) % 25; if (idx < 0) idx += 25;
-            let s = baseS[idx];
+  function applyStyles(){
+    const root = document.documentElement;
+    root.style.setProperty('--pri', colors.PR);
+    root.style.setProperty('--syn', colors.SY);
+    root.style.setProperty('--apo', colors.AP);
+    root.style.setProperty('--vrad', colors.VR);
+    root.style.setProperty('--repo', colors.ΑΔ);
+  }
 
-            let cell = document.createElement('div');
-            cell.className = `cell shift-${s} ${workedDays[dateStr] ? 'worked' : ''}`;
+  function getShiftForDate(key){
+    const curr = parseKey(key);
+    const diff = Math.floor((curr - anchor) / 86400000);
+    const pOff = platoonOffsets[selectedPlatoon];
+    let idx = (diff + pOff) % 25; if(idx < 0) idx += 25;
+    return { shift: baseS[idx], location: baseL[idx], idx };
+  }
 
-            if (workedDays[dateStr]) {
-                stats.workedCount++;
-                if (s === "VR") stats.nights += 8;
-                if (isPenthimero(dateStr, s)) stats.pent++;
-            }
-            if (stadiumDays[dateStr]) stats.stad++;
+  // Πενθήμερο: Σάββατο/Κυριακή ή Παρασκευή VR
+  function isPenthimero(key, shift){
+    const curr = parseKey(key);
+    const dow = curr.getDay(); // 0 Κυρ, 5 Παρ, 6 Σαβ
+    if(dow === 0 || dow === 6) return true;
+    if(dow === 5 && shift === "VR") return true;
+    return false;
+  }
 
-            let hasNote = dayNotes[dateStr];
-            let hasOp = operationalEvents[dateStr];
-            if (hasNote && hasOp) cell.classList.add('has-note');
+  function render(){
+    applyStyles();
+    document.getElementById('platoonSelect').value = selectedPlatoon;
 
-            let content = `<span class="num">${i}</span>`;
-            if (leaveDays[dateStr]) {
-                content += `<div class="leave-overlay">${leaveDays[dateStr]}</div>`;
-            } else {
-                content += `<span class="shft">${s}</span><span class="loc">${(s === 'ΑΔ') ? '' : baseL[idx]}</span>`;
-            }
-            if (stadiumDays[dateStr]) content += `<span class="stadium-mark">🏟️</span>`;
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
 
-            if (showEvents) {
-                if (hasNote) {
-                    content += `<div class="event-bar"></div><div class="event-text">${hasNote}</div>`;
-                }
-                if (hasOp) {
-                    content += `<div class="operational-text">${hasOp}</div>`;
-                }
-            }
+    const months = ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"];
+    document.getElementById('monthLabel').innerText = `${months[d.getMonth()]} ${d.getFullYear()}`;
 
-            cell.innerHTML = content;
-            cell.onclick = () => openModal(dateStr, i);
-            grid.appendChild(cell);
+    // settings & colors inputs
+    document.getElementById('setBase').value = settings.base;
+    document.getElementById('setNight').value = settings.night;
+    document.getElementById('setPent').value = settings.pent;
+    document.getElementById('setStad').value = settings.stad;
+
+    document.getElementById('colPR').value = colors.PR;
+    document.getElementById('colSY').value = colors.SY;
+    document.getElementById('colAP').value = colors.AP;
+    document.getElementById('colVR').value = colors.VR;
+    document.getElementById('colΑΔ').value = colors.ΑΔ;
+
+    document.getElementById('baseKA').value = leaveConfig.ka;
+    document.getElementById('baseBA').value = leaveConfig.ba;
+    document.getElementById('baseHA').value = leaveConfig.ha || 0;
+
+    document.getElementById('yearLabel').innerText = d.getFullYear();
+
+    let firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+    let offset = (firstDay === 0) ? 6 : firstDay - 1;
+    for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+
+    // ✅ stats: nightShifts (όχι ώρες)
+    let stats = { nightShifts: 0, pent: 0, stad: 0 };
+
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const pOff = platoonOffsets[selectedPlatoon];
+
+    for(let day=1; day<=daysInMonth; day++){
+      const curr = new Date(d.getFullYear(), d.getMonth(), day);
+      const dateStr = dateKeyFromDate(curr);
+
+      const diff = Math.floor((curr - anchor)/86400000);
+      let idx = (diff + pOff) % 25; if(idx < 0) idx += 25;
+      const s = baseS[idx];
+
+      const cell = document.createElement('div');
+      cell.className = `cell shift-${s} ${workedDays[dateStr] ? 'worked' : ''}`;
+
+      if(workedDays[dateStr]){
+        if(s === "VR") stats.nightShifts += 1;             // ✅ 1 νυχτερινό = 1x8ωρο
+        if(isPenthimero(dateStr, s)) stats.pent += 1;
+      }
+      if(stadiumDays[dateStr]) stats.stad += 1;
+
+      const hasNote = dayNotes[dateStr];
+      const hasOp = operationalEvents[dateStr];
+      if(hasNote && hasOp) cell.classList.add('has-note');
+
+      let content = `<span class="num">${day}</span>`;
+      if(leaveDays[dateStr]){
+        content += `<div class="leave-overlay">${leaveDays[dateStr]}</div>`;
+      } else {
+        content += `<span class="shft">${s}</span><span class="loc">${(s==='ΑΔ')?'':baseL[idx]}</span>`;
+      }
+
+      if(stadiumDays[dateStr]) content += `<span class="stadium-mark">🏟️</span>`;
+
+      if(showEvents){
+        if(hasNote){
+          content += `<div class="event-bar"></div><div class="event-text">${hasNote}</div>`;
         }
-        updatePayrollUI(stats);
-        updateLeavesUI();
-        updateDayNotesContent();
-    }
-
-    function updatePayrollUI(s) {
-        let base = parseFloat(settings.base) || 0;
-        let nightRate = parseFloat(settings.night) || 0;
-        let pentRate = parseFloat(settings.pent) || 0;
-        let stadRate = parseFloat(settings.stad) || 0;
-        let nT = s.nights * nightRate;
-        let pT = s.pent * pentRate;
-        let sT = s.stad * stadRate;
-        let total = (base + nT + pT + sT).toFixed(2);
-        document.getElementById('grandTotal').innerText = total;
-        document.getElementById('statsDetails').innerHTML = `
-            🏠 Βασικός: <b>${base.toFixed(2)}€</b><br>
-            🌙 Νυχτερινά (${s.nights} ώρες × ${nightRate}€): <b>+${nT.toFixed(2)}€</b><br>
-            📅 Πενθήμερα (${s.pent} ημ. × ${pentRate}€): <b>+${pT.toFixed(2)}€</b><br>
-            🏟️ Γήπεδα (${s.stad} × ${stadRate}€): <b>+${sT.toFixed(2)}€</b><br>
-            <span style="color:#888; font-size:0.7rem;">Σημ: Πενθήμερο = Σάβ, Κυρ, ή Παρ Βράδυ</span>
-        `;
-    }
-
-    function updateLeavesUI() {
-        let count = { ΚΑ: 0, ΒΑ: 0, ΗΑ: 0 };
-        Object.values(leaveDays).forEach(v => { if (count.hasOwnProperty(v)) count[v]++; });
-        document.getElementById('remKA').innerText = (parseInt(leaveConfig.ka) || 0) - count.ΚΑ;
-        document.getElementById('remBA').innerText = (parseInt(leaveConfig.ba) || 0) - count.ΒΑ;
-        document.getElementById('remHA').innerText = (parseInt(leaveConfig.ha) || 0) - count.ΗΑ;
-    }
-
-    function updateDayNotesContent() {
-        let currentMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        let monthNotes = Object.keys(dayNotes).filter(k => k.startsWith(currentMonthStr)).sort();
-        let html = '';
-
-        // Επιχειρησιακά γεγονότα μήνα
-        let monthOps = {};
-        for (let key in operationalEvents) {
-            if (key.startsWith(currentMonthStr)) {
-                let evName = operationalEvents[key];
-                if (!monthOps[evName]) monthOps[evName] = [];
-                monthOps[evName].push(parseInt(key.split('-')[2]));
-            }
+        if(hasOp){
+          content += `<div class="operational-text">${hasOp}</div>`;
         }
-        if (Object.keys(monthOps).length > 0) {
-            html += '<div style="color: #b8860b; font-weight: bold; margin-bottom: 8px;">📋 ΕΠΙΧΕΙΡΗΣΙΑΚΑ ΜΗΝΑ:</div>';
-            for (let ev in monthOps) {
-                let days = monthOps[ev].sort((a, b) => a - b);
-                let range = days[0] + '-' + days[days.length - 1] + '/' + (d.getMonth() + 1);
-                if (days.length === 1) range = days[0] + '/' + (d.getMonth() + 1);
-                html += `<div style="color: #b8860b; margin-left: 10px;">• ${range}: ${ev}</div>`;
-            }
-            html += '<hr style="border-color: #ddd; margin: 10px 0;">';
-        }
+      }
 
-        // Σχόλια χρήστη
-        if (monthNotes.length > 0) {
-            html += '<div style="font-weight: bold; margin-bottom: 5px;">💬 ΣΧΟΛΙΑ ΧΡΗΣΤΗ:</div>';
-            monthNotes.forEach(k => {
-                let dayNum = k.split('-')[2];
-                let monthNum = k.split('-')[1];
-                html += `<div style="margin: 4px 0 4px 10px;">• <b>${parseInt(dayNum)}/${parseInt(monthNum)}:</b> ${dayNotes[k]}</div>`;
-            });
-        } else if (Object.keys(monthOps).length === 0) {
-            html += '<div style="color:#999; text-align:center; padding: 20px;">Κανένα σχόλιο ή γεγονός για αυτόν τον μήνα.</div>';
-        }
-
-        document.getElementById('dayNotesContent').innerHTML = html;
+      cell.innerHTML = content;
+      cell.onclick = () => openModal(dateStr, day);
+      grid.appendChild(cell);
     }
 
-    function saveSettings() {
-        settings.base = parseFloat(document.getElementById('setBase').value) || 1100;
-        settings.night = parseFloat(document.getElementById('setNight').value) || 2.81;
-        settings.pent = parseFloat(document.getElementById('setPent').value) || 46.00;
-        settings.stad = parseFloat(document.getElementById('setStad').value) || 25.00;
-        localStorage.setItem('appSettings', JSON.stringify(settings));
-        render();
+    updatePayrollUI(stats);
+    updateLeavesUI();
+    updateDayNotesContent();
+    loadYearNotes();       // load for current year
+  }
+
+  function updatePayrollUI(s){
+    const base = parseFloat(settings.base) || 0;
+    const nightRate = parseFloat(settings.night) || 0; // ανά 8ωρο
+    const pentRate = parseFloat(settings.pent) || 0;
+    const stadRate = parseFloat(settings.stad) || 0;
+
+    const nT = s.nightShifts * nightRate;
+    const pT = s.pent * pentRate;
+    const sT = s.stad * stadRate;
+
+    const total = (base + nT + pT + sT).toFixed(2);
+    document.getElementById('grandTotal').innerText = total;
+
+    document.getElementById('statsDetails').innerHTML = `
+      🏠 Βασικός: <b>${base.toFixed(2)}€</b><br>
+      🌙 Νυχτερινά (${s.nightShifts} × 8ωρα): <b>+${nT.toFixed(2)}€</b><br>
+      📅 Πενθήμερα (${s.pent}): <b>+${pT.toFixed(2)}€</b><br>
+      🏟️ Γήπεδα (${s.stad}): <b>+${sT.toFixed(2)}€</b><br>
+      <span style="color:#888;font-size:.7rem;">Πενθήμερο = Σάβ, Κυρ ή Παρ Βράδυ (VR)</span>
+    `;
+  }
+
+  function updateLeavesUI(){
+    const count = { ΚΑ:0, ΒΑ:0, ΗΑ:0 };
+    Object.values(leaveDays).forEach(v => { if(count[v] !== undefined) count[v]++; });
+    document.getElementById('remKA').innerText = (parseInt(leaveConfig.ka)||0) - count.ΚΑ;
+    document.getElementById('remBA').innerText = (parseInt(leaveConfig.ba)||0) - count.ΒΑ;
+    document.getElementById('remHA').innerText = (parseInt(leaveConfig.ha)||0) - count.ΗΑ;
+  }
+
+  function updateDayNotesContent(){
+    const currentMonthStr = `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+    let html = '';
+
+    // Operational events of month (auto)
+    const monthOps = {};
+    for(const key in operationalEvents){
+      if(key.startsWith(currentMonthStr)){
+        const ev = operationalEvents[key];
+        if(!monthOps[ev]) monthOps[ev] = [];
+        monthOps[ev].push(parseInt(key.split('-')[2],10));
+      }
     }
 
-    function saveColors() {
-        colors.PR = document.getElementById('colPR').value;
-        colors.SY = document.getElementById('colSY').value;
-        colors.AP = document.getElementById('colAP').value;
-        colors.VR = document.getElementById('colVR').value;
-        colors.ΑΔ = document.getElementById('colΑΔ').value;
-        localStorage.setItem('appColors', JSON.stringify(colors));
-        render();
+    if(Object.keys(monthOps).length){
+      html += '<div style="color:#b8860b;font-weight:800;margin-bottom:8px;">📋 ΕΠΙΧΕΙΡΗΣΙΑΚΑ ΜΗΝΑ:</div>';
+      for(const ev in monthOps){
+        const days = monthOps[ev].sort((a,b)=>a-b);
+        let range = `${days[0]}/${d.getMonth()+1}`;
+        if(days.length > 1) range = `${days[0]}-${days[days.length-1]}/${d.getMonth()+1}`;
+        html += `<div style="color:#b8860b;margin-left:10px;">• ${range}: ${ev}</div>`;
+      }
+      html += '<hr style="border-color:#ddd;margin:10px 0;">';
     }
 
-    function updateLeaveConfig() {
-        leaveConfig.ka = parseInt(document.getElementById('baseKA').value) || 0;
-        leaveConfig.ba = parseInt(document.getElementById('baseBA').value) || 0;
-        leaveConfig.ha = parseInt(document.getElementById('baseHA').value) || 0;
-        localStorage.setItem('leaveConfig', JSON.stringify(leaveConfig));
-        render();
+    // User manual notes (dayNotes)
+    const monthNotes = Object.keys(dayNotes).filter(k => k.startsWith(currentMonthStr)).sort();
+    if(monthNotes.length){
+      html += '<div style="font-weight:800;margin-bottom:5px;">💬 ΣΧΟΛΙΑ ΧΡΗΣΤΗ:</div>';
+      monthNotes.forEach(k=>{
+        const [yy,mm,dd] = k.split('-');
+        html += `<div style="margin:4px 0 4px 10px;">• <b>${parseInt(dd)}/${parseInt(mm)}:</b> ${dayNotes[k]}</div>`;
+      });
+    } else if(!Object.keys(monthOps).length){
+      html += '<div style="color:#999;text-align:center;padding:20px;">Κανένα σχόλιο ή γεγονός για αυτόν τον μήνα.</div>';
     }
 
-    function openModal(key, day) {
-        activeKey = key;
-        let info = getShiftForDate(key);
-        let shiftNames = { PR: "ΠΡΩΙΝΟ", SY: "ΣΥΝΤΗΡΗΣΗ", AP: "ΑΠΟΓΕΥΜΑ", VR: "ΒΡΑΔΥ", ΑΔ: "ΑΛ.ΔΙΜΟΙΡΙΑΣ" };
-        document.getElementById('dateDisplay').innerText = day + " " + document.getElementById('monthLabel').innerText;
-        
-        let extraInfo = '';
-        if (operationalEvents[key]) extraInfo = `<br><span style="color:var(--gold);">⚡ ${operationalEvents[key]}</span>`;
-        document.getElementById('modalShiftInfo').innerHTML = `Βάρδια: <b>${shiftNames[info.shift] || info.shift}</b> ${info.location ? '| ' + info.location : ''}${extraInfo}`;
-        
-        document.getElementById('dayNote').value = dayNotes[key] || "";
-        
-        // Update button states
-        document.getElementById('btnWorked').style.opacity = workedDays[key] ? '0.5' : '1';
-        document.getElementById('btnWorked').innerText = workedDays[key] ? 'ΑΦΑΙΡΕΣΗ ✗' : 'ΔΟΥΛΕΨΑ ✓';
-        document.getElementById('btnStadium').style.opacity = stadiumDays[key] ? '0.5' : '1';
-        document.getElementById('btnStadium').innerText = stadiumDays[key] ? 'ΑΦΑΙΡΕΣΗ 🏟️' : 'ΓΗΠΕΔΟ 🏟️';
-        
-        document.getElementById('modal').style.display = 'flex';
+    document.getElementById('dayNotesContent').innerHTML = html;
+  }
+
+  // ---------- Settings ----------
+  function saveSettings(){
+    settings.base = parseFloat(document.getElementById('setBase').value) || 1100;
+    settings.night = parseFloat(document.getElementById('setNight').value) || 24.00;
+    settings.pent = parseFloat(document.getElementById('setPent').value) || 40.00;
+    settings.stad = parseFloat(document.getElementById('setStad').value) || 20.00;
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+    render();
+  }
+
+  function saveColors(){
+    colors.PR = document.getElementById('colPR').value;
+    colors.SY = document.getElementById('colSY').value;
+    colors.AP = document.getElementById('colAP').value;
+    colors.VR = document.getElementById('colVR').value;
+    colors.ΑΔ = document.getElementById('colΑΔ').value;
+    localStorage.setItem('appColors', JSON.stringify(colors));
+    render();
+  }
+
+  function updateLeaveConfig(){
+    leaveConfig.ka = parseInt(document.getElementById('baseKA').value) || 0;
+    leaveConfig.ba = parseInt(document.getElementById('baseBA').value) || 0;
+    leaveConfig.ha = parseInt(document.getElementById('baseHA').value) || 0;
+    localStorage.setItem('leaveConfig', JSON.stringify(leaveConfig));
+    render();
+  }
+
+  // ---------- Year notes (editable, template only for 2026) ----------
+  function loadYearNotes(){
+    const y = d.getFullYear();
+    const key = `yearNotes_${y}`;
+    const saved = localStorage.getItem(key);
+    if(saved !== null){
+      document.getElementById('yearNotes').value = saved;
+      return;
     }
+    // template only if exists (2026). For 2027/2028 => empty.
+    document.getElementById('yearNotes').value = defaultYearNotes[String(y)] || "";
+  }
 
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+  function saveYearNotes(){
+    const y = d.getFullYear();
+    const key = `yearNotes_${y}`;
+    localStorage.setItem(key, document.getElementById('yearNotes').value);
+  }
 
-    function toggleWorked() {
-        workedDays[activeKey] = !workedDays[activeKey];
-        if (!workedDays[activeKey]) delete workedDays[activeKey];
-        localStorage.setItem('workedDays', JSON.stringify(workedDays));
-        render(); closeModal();
-    }
+  // ---------- Month free text notes ----------
+  function saveFreeTextNotes(btn){
+    const key = `freeNotes_${d.getFullYear()}_${d.getMonth()}`;
+    localStorage.setItem(key, document.getElementById('freeTextNotes').value);
+    const orig = btn.innerText;
+    btn.innerText = '✓ Αποθηκεύτηκε!';
+    setTimeout(()=>btn.innerText = orig, 1200);
+  }
 
-    function toggleStadium() {
-        stadiumDays[activeKey] = !stadiumDays[activeKey];
-        if (!stadiumDays[activeKey]) delete stadiumDays[activeKey];
-        localStorage.setItem('stadiumDays', JSON.stringify(stadiumDays));
-        render(); closeModal();
-    }
+  function loadFreeTextNotes(){
+    const key = `freeNotes_${d.getFullYear()}_${d.getMonth()}`;
+    document.getElementById('freeTextNotes').value = localStorage.getItem(key) || "";
+  }
 
-    function setLeave(type) {
-        if (!type) delete leaveDays[activeKey]; else leaveDays[activeKey] = type;
-        localStorage.setItem('leaveDays', JSON.stringify(leaveDays));
-        render(); closeModal();
-    }
+  // ---------- Modal actions ----------
+  function openModal(key, day){
+    activeKey = key;
+    const info = getShiftForDate(key);
+    const shiftNames = { PR:"ΠΡΩΙΝΟ", SY:"ΣΥΝΤΗΡΗΣΗ", AP:"ΑΠΟΓΕΥΜΑ", VR:"ΒΡΑΔΥ", ΑΔ:"ΑΛ.ΔΙΜΟΙΡΙΑΣ" };
+    document.getElementById('dateDisplay').innerText = `${day} ${document.getElementById('monthLabel').innerText}`;
 
-    function saveDayNote() {
-        let v = document.getElementById('dayNote').value.trim();
-        if (v) dayNotes[activeKey] = v; else delete dayNotes[activeKey];
-        localStorage.setItem('dayNotes', JSON.stringify(dayNotes));
-        render(); closeModal();
-    }
+    let extra = '';
+    if(operationalEvents[key]) extra = `<br><span style="color:var(--gold);font-weight:900;">⚡ ${operationalEvents[key]}</span>`;
+    document.getElementById('modalShiftInfo').innerHTML = `Βάρδια: <b>${shiftNames[info.shift] || info.shift}</b> ${info.location ? '| '+info.location : ''}${extra}`;
 
-    function changeMonth(n) { d.setMonth(d.getMonth() + n); loadFreeTextNotes(); render(); }
+    document.getElementById('dayNote').value = dayNotes[key] || "";
 
-    function changePlatoon() {
-        selectedPlatoon = document.getElementById('platoonSelect').value;
-        localStorage.setItem('selectedPlatoon', selectedPlatoon);
-        render();
-    }
+    document.getElementById('btnWorked').style.opacity = workedDays[key] ? '0.55' : '1';
+    document.getElementById('btnWorked').innerText = workedDays[key] ? 'ΑΦΑΙΡΕΣΗ ✗' : 'ΔΟΥΛΕΨΑ ✓';
 
-    function toggleEvents() {
-        showEvents = !showEvents;
-        localStorage.setItem('showEvents', showEvents);
-        document.getElementById('toggleEventsBtn').innerText = showEvents ? '📅 ΑΠΟΚΡΥΨΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ' : '📅 ΕΜΦΑΝΙΣΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ';
-        render();
-    }
+    document.getElementById('btnStadium').style.opacity = stadiumDays[key] ? '0.55' : '1';
+    document.getElementById('btnStadium').innerText = stadiumDays[key] ? 'ΑΦΑΙΡΕΣΗ 🏟️' : 'ΓΗΠΕΔΟ 🏟️';
 
-    function togglePayroll() {
-        let c = document.getElementById('payrollContent');
-        c.style.display = c.style.display === 'none' ? 'block' : 'none';
-    }
+    document.getElementById('modal').style.display = 'flex';
+  }
+  function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-    function showTab(t) {
-        document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
-        document.getElementById('tab-' + t).style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + t.substring(0, 3)).classList.add('active');
-        if (t === 'leaves') loadFreeTextNotes();
-        render();
-    }
+  function toggleWorked(){
+    workedDays[activeKey] = !workedDays[activeKey];
+    if(!workedDays[activeKey]) delete workedDays[activeKey];
+    localStorage.setItem('workedDays', JSON.stringify(workedDays));
+    render(); closeModal();
+  }
+  function toggleStadium(){
+    stadiumDays[activeKey] = !stadiumDays[activeKey];
+    if(!stadiumDays[activeKey]) delete stadiumDays[activeKey];
+    localStorage.setItem('stadiumDays', JSON.stringify(stadiumDays));
+    render(); closeModal();
+  }
+  function setLeave(type){
+    if(!type) delete leaveDays[activeKey];
+    else leaveDays[activeKey] = type;
+    localStorage.setItem('leaveDays', JSON.stringify(leaveDays));
+    render(); closeModal();
+  }
+  function saveDayNote(){
+    const v = document.getElementById('dayNote').value.trim();
+    if(v) dayNotes[activeKey] = v; else delete dayNotes[activeKey];
+    localStorage.setItem('dayNotes', JSON.stringify(dayNotes));
+    render(); closeModal();
+  }
 
-    function saveFreeTextNotes() {
-        let key = 'freeNotes_' + d.getFullYear() + '_' + d.getMonth();
-        localStorage.setItem(key, document.getElementById('freeTextNotes').value);
-        // Visual feedback
-        let btn = event.target;
-        let orig = btn.innerText;
-        btn.innerText = '✓ Αποθηκεύτηκε!';
-        setTimeout(() => btn.innerText = orig, 1500);
-    }
-
-    function loadFreeTextNotes() {
-        let key = 'freeNotes_' + d.getFullYear() + '_' + d.getMonth();
-        document.getElementById('freeTextNotes').value = localStorage.getItem(key) || "";
-    }
-
-    function clearAllData() {
-        if (confirm('⚠️ ΠΡΟΣΟΧΗ!\n\nΘα διαγραφούν ΟΛΟΚΛΗΡΩΤΙΚΑ:\n• Εργάσιμες ημέρες\n• Γήπεδα\n• Άδειες (ΚΑ, ΒΑ, ΗΑ)\n• Σχόλια ημερών\n• Ελεύθερες σημειώσεις\n• Ρυθμίσεις μισθού & χρωμάτων\n\nΕίστε σίγουροι;')) {
-            localStorage.clear();
-            workedDays = {}; stadiumDays = {}; leaveDays = {}; dayNotes = {};
-            leaveConfig = { ka: 34, ba: 11, ha: 0 };
-            settings = { base: 1100, night: 2.81, pent: 46.00, stad: 25.00 };
-            colors = { PR: "#70d1ff", SY: "#ff2e2e", AP: "#c45b00", VR: "#000000", ΑΔ: "#4a4a4a" };
-            selectedPlatoon = "354"; showEvents = false;
-            alert('✓ Όλα τα δεδομένα διαγράφηκαν!');
-            location.reload();
-        }
-    }
-
-    // Init
-    document.getElementById('toggleEventsBtn').innerText = showEvents ? '📅 ΑΠΟΚΡΥΨΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ' : '📅 ΕΜΦΑΝΙΣΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ';
+  // ---------- Navigation ----------
+  function changeMonth(n){
+    d.setMonth(d.getMonth()+n);
     loadFreeTextNotes();
     render();
+  }
+  function changePlatoon(){
+    selectedPlatoon = document.getElementById('platoonSelect').value;
+    localStorage.setItem('selectedPlatoon', selectedPlatoon);
+    render();
+  }
+  function toggleEvents(){
+    showEvents = !showEvents;
+    localStorage.setItem('showEvents', showEvents);
+    document.getElementById('toggleEventsBtn').innerText = showEvents ? '📅 ΑΠΟΚΡΥΨΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ' : '📅 ΕΜΦΑΝΙΣΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ';
+    render();
+  }
+  function togglePayroll(){
+    const c = document.getElementById('payrollContent');
+    c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+  }
+  function showTab(t){
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display='none');
+    document.getElementById('tab-'+t).style.display='block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-'+t.substring(0,3)).classList.add('active');
+
+    if(t === 'leaves'){
+      loadYearNotes();
+      loadFreeTextNotes();
+    }
+    render();
+  }
+
+  // ---------- Reset ----------
+  function clearAllData(){
+    if(confirm('⚠️ ΠΡΟΣΟΧΗ!\n\nΘα διαγραφούν ΟΛΑ τα δεδομένα (ημερολόγιο/ρυθμίσεις/σημειώσεις).\n\nΣυνέχεια;')){
+      localStorage.clear();
+      location.reload();
+    }
+  }
+
+  // Init
+  document.getElementById('toggleEventsBtn').innerText = showEvents ? '📅 ΑΠΟΚΡΥΨΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ' : '📅 ΕΜΦΑΝΙΣΗ ΣΧΟΛΙΩΝ / ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ';
+  loadFreeTextNotes();
+  render();
 </script>
 </body>
 </html>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work & Leaves Elite v8</title>
+    <title>Work & Leaves Elite v8 - Updated</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
             --pri: #70d1ff; --syn: #ff2e2e; --apo: #c45b00; --vrad: #000000; --repo: #4a4a4a; --green: #2ecc71; --purp: #a55eea;
-            --event: #f1c40f;
+            --event: #f1c40f; /* Χρυσό/Κίτρινο για τα γεγονότα */
         }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding-bottom: 30px; }
         
@@ -34,7 +34,7 @@
         .loc { font-size: 0.52rem; font-weight: bold; opacity: 0.9; text-align: center; margin-top: 3px; z-index: 10; line-height: 0.9; padding: 0 2px; }
         
         .event-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--event); z-index: 12; }
-        .event-text { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 0.4rem; text-align: center; background: rgba(0,0,0,0.8); color: var(--event); font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 13; }
+        .event-text { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 0.45rem; text-align: center; background: rgba(0,0,0,0.85); color: var(--event); font-weight: bold; white-space: nowrap; overflow: hidden; z-index: 13; padding: 1px 0; }
 
         .worked { position: relative; outline: 2px solid var(--green); outline-offset: -2px; }
         .worked::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(46, 204, 113, 0.1) 5px, rgba(46, 204, 113, 0.1) 10px); z-index: 1; }
@@ -54,12 +54,13 @@
         .shift-VR { background: var(--vrad); color: #fff; border: 1px solid #444; }
         .shift-ΑΔ { background: var(--repo); color: #fff; }
 
-        .doc-paper { background: #fdfdfd; color: #000; padding: 20px; border-radius: 4px; font-family: 'Georgia', serif; min-height: 200px; }
+        .doc-paper { background: #fdfdfd; color: #000; padding: 15px; border-radius: 4px; font-family: 'Georgia', serif; min-height: 300px; display: flex; flex-direction: column; }
+        .doc-textarea { flex: 1; width: 100%; border: none; background: transparent; font-family: inherit; font-size: 0.9rem; line-height: 1.6; resize: none; outline: none; }
+        
         .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         .setting-row input[type="number"] { width: 70px; background: #222; border: 1px solid #444; color: var(--pri); padding: 5px; border-radius: 5px; text-align: center; font-weight: bold; }
         .setting-row input[type="color"] { width: 40px; height: 30px; border: none; background: none; cursor: pointer; }
         
-        /* Input styling for leaves */
         .leave-input { background:transparent; border:none; color:white; font-size:1.1rem; font-weight:bold; width:40px; text-align:center; outline: none; }
     </style>
 </head>
@@ -104,7 +105,7 @@
     </div>
 </div>
 
-<!-- TAB: ΣΧΟΛΙΑ -->
+<!-- TAB: ΣΧΟΛΙΑ (ΕΠΕΞΕΡΓΑΣΙΜΑ) -->
 <div id="tab-leaves" style="display:none; padding: 10px;">
     <div style="display: flex; gap: 8px; margin-bottom: 15px;">
         <div style="flex:1; background: #222; padding: 10px; border-radius: 12px; border: 1px solid var(--purp); text-align: center;">
@@ -124,8 +125,8 @@
         </div>
     </div>
     <div class="doc-paper">
-        <h3 style="text-align: center; text-decoration: underline; font-size: 0.9rem; margin-top: 0;">ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΧΟΛΙΑ ΜΗΝΑ</h3>
-        <div id="docContent" style="font-size: 0.85rem; line-height: 1.6; color: #000;"></div>
+        <h3 style="text-align: center; text-decoration: underline; font-size: 0.9rem; margin-top: 0; margin-bottom:10px;">ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΧΟΛΙΑ ΜΗΝΑ</h3>
+        <textarea id="docContentArea" class="doc-textarea" placeholder="Γράψτε εδώ τις σημειώσεις σας..." oninput="saveGlobalNotes()"></textarea>
     </div>
 </div>
 
@@ -173,18 +174,38 @@
 </div>
 
 <script>
-    let d = new Date(2026, 3, 1);
+    let d = new Date(2026, 2, 1); // Ξεκινάμε από Μάρτιο 2026
     const anchor = new Date(2026, 2, 31);
     const baseS = ["VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
     const platoonOffsets = { "351": 5, "352": 10, "353": 15, "354": 0, "355": 20 };
 
+    // ΣΤΑΘΕΡΑ ΕΠΙΧΕΙΡΗΣΙΑΚΑ ΓΕΓΟΝΟΤΑ (Από τη φωτό σου)
+    const fixedEvents = {
+        "2026-02-28": "ΕΠΕΤΕΙΟΣ ΤΕΜΠΩΝ",
+        "2026-04-25": "ΤΕΛΙΚΟΣ ΚΥΠΕΛΛΟΥ",
+        "2026-05-21": "FINAL 4",
+        "2026-05-22": "FINAL 4",
+        "2026-05-23": "FINAL 4",
+        "2026-05-24": "FINAL 4",
+        "2026-05-25": "FINAL 4",
+        "2026-11-15": "ΠΟΛΥΤΕΧΝΕΙΟ",
+        "2026-11-16": "ΠΟΛΥΤΕΧΝΕΙΟ",
+        "2026-11-17": "ΠΟΛΥΤΕΧΝΕΙΟ",
+        "2026-11-18": "ΠΟΛΥΤΕΧΝΕΙΟ",
+        "2026-12-04": "ΓΡΗΓΟΡΟΠΟΥΛΟΣ",
+        "2026-12-05": "ΓΡΗΓΟΡΟΠΟΥΛΟΣ",
+        "2026-12-06": "ΓΡΗΓΟΡΟΠΟΥΛΟΣ",
+        "2026-12-07": "ΓΡΗΓΟΡΟΠΟΥΛΟΣ"
+    };
+
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
     let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
     let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
     let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
+    let globalNotes = localStorage.getItem('globalNotes') || "";
     let selectedPlatoon = localStorage.getItem('selectedPlatoon') || "354";
-    let showEvents = localStorage.getItem('showEvents') === 'true';
+    let showEvents = localStorage.getItem('showEvents') !== 'false';
     let leaveConfig = JSON.parse(localStorage.getItem('leaveConfig')) || { ka: 34, ba: 11, ha: 0 };
     let settings = JSON.parse(localStorage.getItem('appSettings')) || { base: 1100, night: 2.81, pent: 46.00, stad: 25.00 };
     let colors = JSON.parse(localStorage.getItem('appColors')) || { PR: "#70d1ff", SY: "#ff2e2e", AP: "#c45b00", VR: "#000000", ΑΔ: "#4a4a4a" };
@@ -219,6 +240,7 @@
         document.getElementById('baseKA').value = leaveConfig.ka;
         document.getElementById('baseBA').value = leaveConfig.ba;
         document.getElementById('baseHA').value = leaveConfig.ha || 0;
+        document.getElementById('docContentArea').value = globalNotes;
 
         let firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
         let offset = (firstDay === 0) ? 6 : firstDay - 1;
@@ -249,8 +271,12 @@
             else content += `<span class="shft">${s}</span><span class="loc">${(s==='ΑΔ')?'':baseL[idx]}</span>`;
             if(stadiumDays[dateStr]) content += `<span class="stadium-mark">🏟️</span>`;
 
-            if(showEvents && (dayNotes[dateStr])) {
-                content += `<div class="event-bar"></div><div class="event-text">${dayNotes[dateStr]}</div>`;
+            // Εμφάνιση Σχολίων ή Επιχειρησιακών
+            if(showEvents) {
+                let note = dayNotes[dateStr] || fixedEvents[dateStr];
+                if(note) {
+                    content += `<div class="event-bar"></div><div class="event-text">${note}</div>`;
+                }
             }
             
             cell.innerHTML = content;
@@ -277,20 +303,15 @@
 
     function updateLeavesUI() {
         let count = { ΚΑ: 0, ΒΑ: 0, ΗΑ: 0 };
-        Object.values(leaveDays).forEach(v => count[v]++);
+        Object.values(leaveDays).forEach(v => { if(count[v] !== undefined) count[v]++; });
         document.getElementById('remKA').innerText = leaveConfig.ka - count.ΚΑ;
         document.getElementById('remBA').innerText = leaveConfig.ba - count.ΒΑ;
         document.getElementById('remHA').innerText = (leaveConfig.ha || 0) - count.ΗΑ;
+    }
 
-        let html = '<ul style="padding-left:15px; margin:0;">';
-        let currentMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        let monthNotes = Object.keys(dayNotes).filter(k => k.startsWith(currentMonthStr)).sort();
-        
-        if(monthNotes.length === 0) html += "<li>Κανένα σχόλιο για αυτόν τον μήνα.</li>";
-        monthNotes.forEach(k => {
-            html += `<li style="margin-bottom:8px;"><b>${k.split('-').reverse()[0]}/${k.split('-').reverse()[1]}:</b> ${dayNotes[k]}</li>`;
-        });
-        document.getElementById('docContent').innerHTML = html + '</ul>';
+    function saveGlobalNotes() {
+        globalNotes = document.getElementById('docContentArea').value;
+        localStorage.setItem('globalNotes', globalNotes);
     }
 
     function saveSettings() {
@@ -343,6 +364,7 @@
     function changePlatoon() { selectedPlatoon = document.getElementById('platoonSelect').value; localStorage.setItem('selectedPlatoon', selectedPlatoon); render(); }
     function toggleEvents() { showEvents = !showEvents; localStorage.setItem('showEvents', showEvents); render(); }
     function togglePayroll() { let c = document.getElementById('payrollContent'); c.style.display = c.style.display==='none'?'block':'none'; }
+    
     function showTab(t) { 
         document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
         document.getElementById('tab-'+t).style.display = 'block';

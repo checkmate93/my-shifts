@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work Tracker Pro v4</title>
+    <title>Work Tracker Pro v4 - Full</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --txt: #ffffff;
@@ -25,12 +25,13 @@
         .loc { font-size: 0.62rem; font-weight: bold; text-align: center; margin-top: 2px; z-index: 5; line-height: 1; padding: 0 2px; }
         .event-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--event); z-index: 10; }
         .event-text { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 0.45rem; text-align: center; background: rgba(0,0,0,0.8); color: var(--event); font-weight: bold; white-space: nowrap; z-index: 11; }
+        .stadium-mark { position: absolute; top: 2px; right: 2px; font-size: 0.6rem; z-index: 11; }
         .worked { outline: 2px solid var(--green); outline-offset: -2px; }
         .worked::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(46, 204, 113, 0.1) 5px, rgba(46, 204, 113, 0.1) 10px); }
         .leave-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.65); font-size: 1rem; font-weight: 900; color: white; z-index: 20; }
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: #1a1a1a; width: 90%; padding: 20px; border-radius: 20px; border: 1px solid #333; }
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-bottom: 8px; }
+        .modal-content { background: #1a1a1a; width: 90%; padding: 20px; border-radius: 20px; border: 1px solid #333; max-height: 85vh; overflow-y: auto; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-bottom: 8px; cursor: pointer; }
         .shift-PR { background: var(--pri); color: #000; }
         .shift-SY { background: var(--syn); color: #fff; }
         .shift-AP { background: var(--apo); color: #fff; }
@@ -42,8 +43,8 @@
 <body>
 
 <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('calendar')">ΗΜΕΡΟΛΟΓΙΟ</button>
-    <button class="tab-btn" onclick="showTab('leaves')">ΑΔΕΙΕΣ</button>
+    <button id="tab-cal-btn" class="tab-btn active" onclick="showTab('calendar')">ΗΜΕΡΟΛΟΓΙΟ</button>
+    <button id="tab-lea-btn" class="tab-btn" onclick="showTab('leaves')">ΑΔΕΙΕΣ</button>
 </div>
 
 <div id="tab-calendar">
@@ -66,54 +67,68 @@
         <div class="day-name">ΔΕ</div><div class="day-name">ΤΡ</div><div class="day-name">ΤΕ</div><div class="day-name">ΠΕ</div><div class="day-name">ΠΑ</div><div class="day-name">ΣΑ</div><div class="day-name">ΚΥ</div>
     </div>
     <div class="grid" id="grid"></div>
-    <button class="btn" style="background:#333; color:var(--event); margin:15px 12px; width:calc(100% - 24px);" onclick="toggleEvents()">📅 ΕΠΙΧΕΙΡΗΣΙΑΚΑ / ΣΧΟΛΙΑ</button>
+    <button class="btn" style="background:#333; color:var(--event); margin:15px 12px; width:calc(100% - 24px);" onclick="toggleEvents()">📅 ΕΜΦΑΝΙΣΗ ΕΠΙΧΕΙΡΗΣΙΑΚΩΝ / ΣΧΟΛΙΩΝ</button>
 </div>
 
 <div id="tab-leaves" style="display:none; padding:20px;">
-    <h4>Προγραμματισμένη Άδεια:</h4>
-    <input type="text" id="plannedLeave" oninput="savePlannedLeave()" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444;">
+    <h4 style="color:var(--pri)">Προγραμματισμένη Άδεια:</h4>
+    <input type="text" id="plannedLeave" placeholder="π.χ. Β' Μαχίμων" oninput="savePlannedLeave()" style="width:100%; padding:12px; background:#222; color:white; border:1px solid #444; border-radius:8px;">
+    <div id="leaveStats" style="margin-top:20px; font-size:0.9rem; color:#aaa;"></div>
 </div>
 
 <div id="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="dateDisplay"></h3>
-        <button class="btn" onclick="toggleWorked()" style="background:var(--green); color:white;">ΔΟΥΛΕΨΑ ✓</button>
-        <input type="text" id="dayNote" placeholder="Σχόλιο..." style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
-        <button class="btn" onclick="saveDayNote()" style="background:var(--pri); color:black;">ΑΠΟΘΗΚΕΥΣΗ</button>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-top:10px;">
-            <div class="cell shift-PR" style="padding:10px;" onclick="updateShift('PR')">ΠΡ</div>
-            <div class="cell shift-SY" style="padding:10px;" onclick="updateShift('SY')">ΣΥ</div>
-            <div class="cell shift-AP" style="padding:10px;" onclick="updateShift('AP')">ΑΠ</div>
-            <div class="cell shift-VR" style="padding:10px;" onclick="updateShift('VR')">ΒΡ</div>
-            <div class="cell shift-ΑΔ" style="padding:10px;" onclick="updateShift('ΑΔ')">ΑΔ</div>
-            <div class="cell shift-Ρεπ" style="padding:10px;" onclick="updateShift('Ρεπ')">Ρεπ</div>
+        <h3 id="dateDisplay" style="margin-top:0"></h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+            <button class="btn" onclick="toggleWorked()" style="background:var(--green); color:white; margin:0">ΔΟΥΛΕΨΑ ✓</button>
+            <button class="btn" onclick="toggleStadium()" style="background:var(--event); color:black; margin:0">ΓΗΠΕΔΟ 🏟️</button>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:5px; margin-top:10px;">
-            <button class="btn" style="background:var(--purp); color:white;" onclick="setLeave('ΚΑ')">ΚΑ</button>
-            <button class="btn" style="background:var(--purp); color:white;" onclick="setLeave('ΒΑ')">ΒΑ</button>
+        <input type="text" id="dayNote" placeholder="Σχόλιο..." style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box; background:#222; color:white; border:1px solid #444; border-radius:8px;">
+        <button class="btn" onclick="saveDayNote()" style="background:var(--pri); color:black;">ΑΠΟΘΗΚΕΥΣΗ</button>
+        
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-top:10px;">
+            <div class="cell shift-PR" style="padding:10px; aspect-ratio:auto" onclick="updateShift('PR')">ΠΡ</div>
+            <div class="cell shift-SY" style="padding:10px; aspect-ratio:auto" onclick="updateShift('SY')">ΣΥ</div>
+            <div class="cell shift-AP" style="padding:10px; aspect-ratio:auto" onclick="updateShift('AP')">ΑΠ</div>
+            <div class="cell shift-VR" style="padding:10px; aspect-ratio:auto" onclick="updateShift('VR')">ΒΡ</div>
+            <div class="cell shift-ΑΔ" style="padding:10px; aspect-ratio:auto" onclick="updateShift('ΑΔ')">ΑΔ</div>
+            <div class="cell shift-Ρεπ" style="padding:10px; aspect-ratio:auto" onclick="updateShift('Ρεπ')">Ρεπ</div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; margin-top:10px;">
+            <button class="btn" style="background:var(--purp); color:white; font-size:0.8rem;" onclick="setLeave('ΚΑ')">ΚΑ</button>
+            <button class="btn" style="background:var(--purp); color:white; font-size:0.8rem;" onclick="setLeave('ΒΑ')">ΒΑ</button>
+            <button class="btn" style="background:#444; color:white; font-size:0.8rem;" onclick="setLeave(null)">X</button>
         </div>
     </div>
 </div>
 
 <script>
     let d = new Date(2026, 3, 1);
-    const anchor = new Date(2026, 2, 31); // 31 Μαρτίου 2026
+    const anchor = new Date(2026, 2, 31); 
 
     const baseS = ["VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP","VR","ΑΔ","PR","SY","AP"];
     const baseL = ["ΝΔ","","Βουλή","---","Οικίες","Ηρώδου","","Κέντρο","---","ΝΔ","Βουλή","","Οικίες","---","Ηρώδου","Μον/κι","","ΝΔ","---","Βουλή","Οικίες","","Ηρώδου","---","---"];
 
-    // ΔΙΟΡΘΩΜΕΝΑ OFFSETS (Πού βρίσκεται η κάθε διμοιρία στη λούπα στις 31/03)
     const platoonOffsets = {
-        "351": 5,  // 31/03 Βράδυ Ηρώδου (idx 5 της λούπας)
-        "352": 10, // 31/03 Βράδυ Οικίες (idx 10) -> Μετά θα πάει Κέντρο
-        "353": 15, // 31/03 Βράδυ Βουλή (idx 15) -> Μετά θα πάει Οικίες
-        "354": 0,  // 31/03 Βράδυ ΝΔ (idx 0)
-        "355": 20  // 31/03 Βράδυ Μον/κι (idx 20)
+        "351": 5,  "352": 10, "353": 15, "354": 0, "355": 20
     };
+
+    const staticEvents = [
+        { s: "2026-02-28", e: "2026-02-28", t: "ΤΕΜΠΗ" },
+        { s: "2026-04-06", e: "2026-04-15", t: "ΠΑΣΧΑ" },
+        { s: "2026-05-21", e: "2026-05-25", t: "FINAL 4" },
+        { s: "2026-11-15", e: "2026-11-18", t: "ΠΟΛΥΤΕΧΝΕΙΟ" },
+        { s: "2026-12-04", e: "2026-12-07", t: "ΓΡΗΓΟΡΟΠΟΥΛΟΣ" },
+        { s: "2026-06-22", e: "2026-07-11", t: "Α' ΜΑΧΙΜΩΝ" },
+        { s: "2026-07-12", e: "2026-07-31", t: "Β' ΜΑΧΙΜΩΝ" },
+        { s: "2026-08-01", e: "2026-08-20", t: "Γ' ΜΑΧΙΜΩΝ" }
+    ];
 
     let currentPlatoon = localStorage.getItem('selectedPlatoon') || "354";
     document.getElementById('platoonSelect').value = currentPlatoon;
+    
     let workedDays = JSON.parse(localStorage.getItem('workedDays')) || {};
+    let stadiumDays = JSON.parse(localStorage.getItem('stadiumDays')) || {};
     let leaveDays = JSON.parse(localStorage.getItem('leaveDays')) || {};
     let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
     let userShifts = JSON.parse(localStorage.getItem('userShifts')) || {};
@@ -146,26 +161,40 @@
             if(leaveDays[dateStr]) content += `<div class="leave-overlay">${leaveDays[dateStr]}</div>`;
             else content += `<span class="shft">${s}</span><span class="loc">${(s==='ΑΔ'||s==='Ρεπ')?'':baseL[idx]}</span>`;
             
-            if(showEvents && dayNotes[dateStr]) {
-                content += `<div class="event-bar"></div><div class="event-text">${dayNotes[dateStr]}</div>`;
+            if(stadiumDays[dateStr]) content += `<span class="stadium-mark">🏟️</span>`;
+
+            if(showEvents) {
+                let note = dayNotes[dateStr];
+                let staticEv = staticEvents.find(e => dateStr >= e.s && dateStr <= e.e);
+                let text = note || (staticEv ? staticEv.t : "");
+                if(text) content += `<div class="event-bar"></div><div class="event-text">${text}</div>`;
             }
             
             cell.innerHTML = content;
             cell.onclick = () => openModal(dateStr, i);
             grid.appendChild(cell);
         }
+        document.getElementById('plannedLeave').value = localStorage.getItem('plannedLeave') || "";
     }
 
     function changePlatoon() { currentPlatoon = document.getElementById('platoonSelect').value; localStorage.setItem('selectedPlatoon', currentPlatoon); render(); }
     function openModal(key, day) { activeKey = key; document.getElementById('dateDisplay').innerText = day + " " + document.getElementById('monthLabel').innerText; document.getElementById('dayNote').value = dayNotes[key] || ""; document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
     function saveDayNote() { let val = document.getElementById('dayNote').value.trim(); if(val) dayNotes[activeKey] = val; else delete dayNotes[activeKey]; localStorage.setItem('dayNotes', JSON.stringify(dayNotes)); render(); closeModal(); }
-    function toggleWorked() { workedDays[activeKey] = !workedDays[activeKey]; localStorage.setItem('workedDays', JSON.stringify(workedDays)); render(); closeModal(); }
+    function toggleWorked() { workedDays[activeKey] = !workedDays[activeKey]; localStorage.setItem('workedDays', JSON.stringify(workedDays)); render(); }
+    function toggleStadium() { stadiumDays[activeKey] = !stadiumDays[activeKey]; localStorage.setItem('stadiumDays', JSON.stringify(stadiumDays)); render(); }
     function setLeave(type) { if(!type) delete leaveDays[activeKey]; else leaveDays[activeKey] = type; localStorage.setItem('leaveDays', JSON.stringify(leaveDays)); render(); closeModal(); }
     function updateShift(val) { userShifts[activeKey] = val; localStorage.setItem('userShifts', JSON.stringify(userShifts)); render(); closeModal(); }
     function toggleEvents() { showEvents = !showEvents; localStorage.setItem('showEvents', showEvents); render(); }
     function changeMonth(n) { d.setMonth(d.getMonth()+n); render(); }
-    function showTab(t) { document.getElementById('tab-calendar').style.display = t==='calendar'?'block':'none'; document.getElementById('tab-leaves').style.display = t==='leaves'?'block':'none'; render(); }
+    function showTab(t) { 
+        document.getElementById('tab-calendar').style.display = t==='calendar'?'block':'none'; 
+        document.getElementById('tab-leaves').style.display = t==='leaves'?'block':'none'; 
+        document.getElementById('tab-cal-btn').classList.toggle('active', t==='calendar');
+        document.getElementById('tab-lea-btn').classList.toggle('active', t==='leaves');
+        render(); 
+    }
+    function savePlannedLeave() { localStorage.setItem('plannedLeave', document.getElementById('plannedLeave').value); }
     render();
 </script>
 </body>
